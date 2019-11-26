@@ -1,7 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <PackageId>k.db_bfagundes</PackageId>
+    <Authors>Bruno de Lima Fagundes</Authors>
+    <Product>kcore.db</Product>
+    <Description>Kurumin database library</Description>
+    <AssemblyVersion>1001.0.0.0</AssemblyVersion>
+    <FileVersion>1001.0.0.0</FileVersion>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\k\k.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Factory\" />
+  </ItemGroup>
 
 </Project>

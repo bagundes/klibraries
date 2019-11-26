@@ -4,11 +4,15 @@ using System.Text;
 
 namespace k.Lists
 {
-    class SelectList<T> where T : class, IBaseList
+    /// <summary>
+    /// List of specific type of value
+    /// </summary>
+    /// <typeparam name="TValue">Value</typeparam>
+    class SelectList<TValue> where TValue : class, IBaseList
     {
-        private Dictionary<string, T> Select = new Dictionary<string, T>();
+        private Dictionary<string, TValue> Select = new Dictionary<string, TValue>();
 
-        public void Set(string key, T value)
+        public void Set(string key, TValue value)
         {
             if (Select.ContainsKey(key))
                 Select[key] = value;
@@ -16,7 +20,7 @@ namespace k.Lists
                 Select.Add(key, value);
         }
 
-        public bool Get(string key, out T value)
+        public bool Get(string key, out TValue value)
         {
             if (!Contains(key))
             {

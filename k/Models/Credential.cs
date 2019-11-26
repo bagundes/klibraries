@@ -62,7 +62,7 @@ namespace k.Models
 
         public virtual object GetParameter(string key, string msgerror)
         {
-            object val;
+            Dynamic val;
             if (!Parameters.Get(key, out val) && !String.IsNullOrEmpty(msgerror))
                 throw new KeyNotFoundException(msgerror);
             else

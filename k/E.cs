@@ -13,5 +13,11 @@ namespace k
             KDB = 1001,
 
         }
+
+        public enum Message
+        {
+            TestMessage = -1,
+            GenerelError = 0
+        }
     }
 }

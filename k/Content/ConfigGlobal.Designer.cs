@@ -22,14 +22,14 @@ namespace k.Content {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class ConfGlobal {
+    internal class ConfigGlobal {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal ConfGlobal() {
+        internal ConfigGlobal() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace k.Content {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("k.Content.ConfGlobal", typeof(ConfGlobal).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("k.Content.ConfigGlobal", typeof(ConfigGlobal).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,6 +61,33 @@ namespace k.Content {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 7.
+        /// </summary>
+        internal static string ClearLogThanNDays {
+            get {
+                return ResourceManager.GetString("ClearLogThanNDays", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Teamsoft ltd.
+        /// </summary>
+        internal static string CompanyName {
+            get {
+                return ResourceManager.GetString("CompanyName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to en-GB.
+        /// </summary>
+        internal static string CultureLanguage {
+            get {
+                return ResourceManager.GetString("CultureLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 0.
         /// </summary>
         internal static string DebugMode {
@@ -70,7 +97,7 @@ namespace k.Content {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 599868072cd00885a8841eeb11b919c2.
+        ///   Looks up a localized string similar to 1234567890.
         /// </summary>
         internal static string MasterKey {
             get {

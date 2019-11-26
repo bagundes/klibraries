@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace k.Lists
@@ -20,8 +21,10 @@ namespace k.Lists
         {
             get
             {
+                key = key.ToLower();
+
                 if (Contains(key))
-                    return new Dynamic(Parameters[key]);
+                    return new Dynamic(Parameters[GetKey(key)]);
                 else
                     return Dynamic.Empty;
             }
@@ -34,8 +37,10 @@ namespace k.Lists
         /// <param name="value">Value</param>
         public void Set(string key, object value)
         {
-            if (Parameters.ContainsKey(key))
-                Parameters[key] = value;
+            key = key.ToLower();
+
+            if (Contains(key))
+                Parameters[GetKey(key)] = value;
             else
                 Parameters.Add(key, value);
         }
@@ -48,13 +53,15 @@ namespace k.Lists
         /// <returns>If key exists.</returns>
         public bool Get(string key, out Dynamic value)
         {
+            key = key.ToLower();
+
             if(!Contains(key))
             {
                 value = null;
                 return false;
             } else
             {
-                value = new Dynamic(Parameters[key]);
+                value = new Dynamic(Parameters[GetKey(key)]);
                 return true;
             }
         }
@@ -66,7 +73,12 @@ namespace k.Lists
         /// <returns></returns>
         public bool Contains(string key)
         {
-            return Parameters.ContainsKey(key);
+            return Parameters.Where(t => t.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase)).Any();
+        }
+
+        private string GetKey(string key)
+        {
+            return Parameters.Where(t => t.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase)).Select(t => t.Key).FirstOrDefault();
         }
     }
 }

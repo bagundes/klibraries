@@ -38,6 +38,18 @@ namespace k
             return SHA512(input);
         }
 
+        public static int Id(params object[] values)
+        {
+            var input = String.Join("", values);
+            input = input.Replace(Environment.NewLine, "").Replace(@"\n", "").Replace(@"\t", "");
+
+            var id = 0;
+            foreach (char c in input)
+                id += (int)c;
+
+            return id;
+        }
+
         public static string RandomChars(int size, bool special = false)
         {
             var chars = System.String.Empty;

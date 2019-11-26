@@ -1,44 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Resources;
 using System.Text;
 
 namespace k
 {
-    public abstract class KCoreException : Exception
+    public class KException : BaseException
     {
-        public readonly int Code;
-        public readonly string LogName;
-        public readonly string Tag;
-        protected object[] Values;
-        protected int AppId;
+        protected override string MessageLangFile => k.R.App.MessageLangFile;
 
-        public override string Message => CreateMessage();
-        protected abstract ResourceManager Resx { get; }
-
-        public KCoreException(E.Projects appId, string log, Enum code, params object[] values)
+        public KException(string log, Exception ex) : base(E.Projects.KCore, log, ex)
         {
-            LogName = log;
-            Code = Convert.ToInt32(code);
-            Tag = code.ToString();
-            Values = values;
-            AppId = Convert.ToInt32(appId);
         }
 
-        public KCoreException(E.Projects proj, string log, Exception ex)
+        public KException(string log, E.Message code, params object[] values) : base(E.Projects.KCore, log, code, values)
         {
-
         }
 
-        protected string CreateMessage()
-        {
-
-        }
-
-        protected void CreateTrackFile()
-        {
-
-        }
-
+        
     }
 }

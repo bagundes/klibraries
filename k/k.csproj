@@ -2,24 +2,42 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.0</Version>
+    <Authors>Bruno de Lima Fagundes</Authors>
+    <Product>kcore</Product>
+    <AssemblyVersion>1000.0.0.0</AssemblyVersion>
+    <FileVersion>1000.0.0.0</FileVersion>
+    <PackageId>k_bfagundes</PackageId>
+    <Description>Kurumin core library</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetZip" Version="1.13.4" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Content\ConfGlobal.Designer.cs">
+    <Compile Update="Content\ConfigGlobal.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
-      <DependentUpon>ConfGlobal.resx</DependentUpon>
+      <DependentUpon>ConfigGlobal.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Content\Language\en-GB.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>en-GB.resx</DependentUpon>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Content\ConfGlobal.resx">
+    <EmbeddedResource Update="Content\ConfigGlobal.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>ConfGlobal.Designer.cs</LastGenOutput>
+      <LastGenOutput>ConfigGlobal.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Content\Language\en-GB.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>en-GB.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
 
