@@ -22,7 +22,7 @@ namespace k
             init.Init20_Config();
             init.Init50_Threads();
 
-            k.Diagnostic.Debug("StartInit", E.Projects.KCore, "Registred the library {0}", name);
+            k.Diagnostic.Debug("StartInit", R.Project, "Registred the library {0}", name);
             Ran.Add(name);
         }
 

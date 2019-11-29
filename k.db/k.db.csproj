@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>k.db_bfagundes</PackageId>
     <Authors>Bruno de Lima Fagundes</Authors>
     <Product>kcore.db</Product>
@@ -17,10 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\k\k.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Factory\" />
   </ItemGroup>
 
 </Project>

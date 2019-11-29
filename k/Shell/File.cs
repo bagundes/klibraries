@@ -59,10 +59,7 @@ namespace k.Shell
                 using (var file = new System.IO.StreamWriter(filename, true))
                 {
                     for (int i = 0; i < lines.Length; i++)
-                    {
-                        var tab = i > 0 ? "\t" : "";
-                        file.WriteLine(tab + lines[i]);
-                    }
+                        file.WriteLine(lines[i]);
                 }
             }
         }
@@ -114,7 +111,7 @@ namespace k.Shell
                 if (R.DebugMode && files.Length > 0)
                 {
                     var track = Diagnostic.Track(files);
-                    Diagnostic.Debug(typeof(File).Name, E.Projects.KCore, track, "Compacted {0} files to {1}", files.Length, destination);
+                    Diagnostic.Debug(typeof(File).Name, R.Project, track, "Compacted {0} files to {1}", files.Length, destination);
                 }
             }
         }
@@ -170,7 +167,7 @@ namespace k.Shell
             if(R.DebugMode && files.Length > 0)
             {
                 var track = Diagnostic.Track(Array.ConvertAll(files, t => t.FullName));
-                Diagnostic.Debug(typeof(File).Name, E.Projects.KCore, track, "Deleted {0} files", files.Length);
+                Diagnostic.Debug(typeof(File).Name, R.Project, track, "Deleted {0} files", files.Length);
             }
         }
 

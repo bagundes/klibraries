@@ -14,7 +14,7 @@ namespace k.Shell
             TempData = 99,
         }
 
-        public static string TempDataFolder(E.Projects project, params string[] folders)
+        public static string TempDataFolder(G.Projects project, params string[] folders)
         {
             var path = new string[2];
 
@@ -24,7 +24,7 @@ namespace k.Shell
             return Folder(Path.Combine(path), folders);
         }
 
-        public static string AppDataFolder(E.Projects project, params string[] folders)
+        public static string AppDataFolder(G.Projects project, params string[] folders)
         {
             var path = new string[2];
 
@@ -39,7 +39,7 @@ namespace k.Shell
         /// </summary>
         /// <param name="project">Project</param>
         /// <param name="folders">Folders to delete</param>
-        public static void DelTree(E.Projects project, SpecialFolder special, params string[] folders)
+        public static void DelTree(G.Projects project, SpecialFolder special, params string[] folders)
         {
             folders = folders ?? new string[0];
             var path = new string[folders.Length + 2];
@@ -82,7 +82,7 @@ namespace k.Shell
                 if (!System.IO.Directory.Exists(specificFolder))
                 {
                     System.IO.Directory.CreateDirectory(specificFolder);
-                    k.Diagnostic.Debug("Folder", E.Projects.KCore, "Created folder:{0}", specificFolder);
+                    k.Diagnostic.Debug("Folder", R.Project, "Created folder:{0}", specificFolder);
                 }
 
                 return specificFolder;

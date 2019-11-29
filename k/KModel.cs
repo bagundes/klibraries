@@ -6,13 +6,14 @@ using System.Text;
 
 namespace k
 {
-    public abstract class KModel : ICloneable
+    public abstract class KModel
     {
         public string Log => this.GetType().Name;
         
-        public virtual object Clone()
+        protected virtual Object Clone() 
         {
-            throw new NotImplementedException();
+            var json = JsonConvert.SerializeObject(this);
+            return JsonConvert.DeserializeObject(json, this.GetType());
         }
 
         public virtual string ToJson()
@@ -21,7 +22,7 @@ namespace k
 
             if (R.DebugMode) formatting = Formatting.Indented;
 
-            var json = Newtonsoft.Json.JsonConvert.SerializeObject(this,
+            var json = JsonConvert.SerializeObject(this,
                 new JsonSerializerSettings
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver(),

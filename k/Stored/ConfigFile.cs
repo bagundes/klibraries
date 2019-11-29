@@ -8,7 +8,7 @@ namespace k.Stored
     {
         private static string LOG => typeof(ConfigFile).Name;
 
-        private static Lists.ParametersList Params = new Lists.ParametersList();
+        private static Lists.GenericList Params = new Lists.GenericList();
 
         //internal static void Loading()
         //{

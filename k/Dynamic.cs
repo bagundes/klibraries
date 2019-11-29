@@ -24,6 +24,7 @@ namespace k
             return v.ToString();
         }
 
+
         public static implicit operator Dynamic(int v)
         {
             return new Dynamic(v);
@@ -46,6 +47,11 @@ namespace k
         #endregion
 
         #region Convert to
+        public T ToEnum<T>() where T : Enum
+        {
+            throw new NotImplementedException();
+            //return (T)ToInt();
+        }
         public override string ToString()
         {
             return Value.ToString();
@@ -95,8 +101,11 @@ namespace k
         {
             var val = Value.ToString();
             return Dynamic.StringFormat(val, values);
+        }
 
-            return val;
+        public string Decrypt()
+        {
+            return k.Security.Decrypt(ToString());
         }
         #endregion
 
@@ -107,31 +116,37 @@ namespace k
         #region Static
         public static Dynamic Empty => new Dynamic(String.Empty);
 
-        public static string StringFormat(string val, params object[] values)
+        public static string StringFormat(string format, params object[] values)
         {
-            var val1 = val.Clone().ToString();
+            var val1 = format.Clone().ToString();
 
             values = values ?? new object[0];
             int sf = 0;
 
             for (int i = 0; i < values.Length; i++)
             {
-                if (val.Contains($"{{{i}}}"))
+                if (format.Contains($"{{{i}}}"))
                 {
                     sf++;
-                    val = val.Replace($"{{{i}}}", values[i].ToString());
+                    format = format.Replace($"{{{i}}}", values[i].ToString());
                 }
             }
 
             if (sf != values.Length)
             {
-                var track = k.Diagnostic.Track(values);
-                k.Diagnostic.Warning("StringFormat", R.Project, track, "The string is not contains all values of parameters");
+                var list = new List<object>();
+                list.Add($"Value : {val1}");
+                list.Add($"Format: {format}");
+                for (int i = 0; i < values.Length; i++)
+                    list.Add($"{String.Format("{0, 6}", i)}: {values[i]}");
+
+                var track = k.Diagnostic.Track(list.ToArray());
+                k.Diagnostic.Warning("StringFormat", track, R.Project, "The string is not contains all values of parameters");
+
+                return $"!{format}";
             }
 
-            return val;
-
-
+            return format;
         }
         #endregion
     }

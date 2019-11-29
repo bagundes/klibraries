@@ -10,7 +10,7 @@ namespace k.db
 
         public void Init10_Dependency()
         {
-            k.Diagnostic.Debug(control, E.Projects.KCore, "Debug mode is enabled");
+            k.StartInit.Starting(new k.Init());
         }
 
         public void Init20_Config()

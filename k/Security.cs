@@ -11,6 +11,16 @@ namespace k
         private static string masterKey => k.R.Security.MasterKey;
         private static string keyValidate => "@";
 
+        public static string Encrypt(string message)
+        {
+            return Encrypt(message, masterKey);
+        }
+
+        public static string Decrypt(string token)
+        {
+            return Decrypt(token, masterKey);
+        }
+
         public static string Encrypt(string message, string key)
         {
             message = Encrypt1(message, MyKey(key));
@@ -38,16 +48,16 @@ namespace k
             return SHA512(input);
         }
 
-        public static int Id(params object[] values)
+        public static string Id(params object[] values)
         {
             var input = String.Join("", values);
             input = input.Replace(Environment.NewLine, "").Replace(@"\n", "").Replace(@"\t", "");
 
             var id = 0;
             foreach (char c in input)
-                id += (int)c;
+                id += c;
 
-            return id;
+            return String.Format("{0:X}", id);
         }
 
         public static string RandomChars(int size, bool special = false)
@@ -66,6 +76,7 @@ namespace k
                           .ToArray());
             return result;
         }
+        
         #region Validation
         private static string AddTokenValidation(ref string token)
         {

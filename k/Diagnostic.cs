@@ -52,19 +52,19 @@ namespace k
         /// Create a error message log
         /// </summary>
         /// <param name="instance">Class hash code or class name</param>
+        /// /// <param name="track">Track file</param>
         /// <param name="prj">Project name</param>
-        /// <param name="track">Track file</param>
         /// <param name="message">Message</param>
         /// <param name="values">Values to string format</param>
-        public static void Error(string instance, E.Projects prj, int track, string message, params object[] values)
+        public static void Error(string log, string track, G.Projects prj, string message, params object[] values)
         {
-            Register(DiagnosticType.Error, instance, prj, track, message, values);
+            Register(DiagnosticType.Error, log, track, prj, message, values);
         }
 
-        public static void Error(string log, E.Projects prj, Exception ex)
+        public static void Error(string log, G.Projects prj, Exception ex)
         {
             var track = Track(ex);
-            Register(DiagnosticType.Error, instance, prj, track, message, values);
+            Register(DiagnosticType.Error, log, track, prj, ex.Message);
 
         }
 
@@ -75,9 +75,9 @@ namespace k
         /// <param name="prj">Project name</param>
         /// <param name="message">Message</param>
         /// <param name="values">Values to string format</param>
-        public static void Error(string instance, E.Projects prj, string message, params object[] values)
+        public static void Error(string instance, G.Projects prj, string message, params object[] values)
         {
-            Register(DiagnosticType.Error, instance, prj, -1, message, values);
+            Register(DiagnosticType.Error, instance, null, prj, message, values);
         }
         #endregion
 
@@ -87,77 +87,122 @@ namespace k
         /// Create a warning message log
         /// </summary>
         /// <param name="instance">Class hash code or class name</param>
+        /// <param name="track">Track id</param>
         /// <param name="prj">Project name</param>
-        /// <param name="track">Track file</param>
+
         /// <param name="message">Message</param>
         /// <param name="values">Values to string format</param>
-        public static void Warning(string instance, E.Projects prj, int track, string message, params object[] values)
+        public static void Warning(string instance, string track, G.Projects prj, string message, params object[] values)
         {
-            Register(DiagnosticType.Warning, instance, prj, track, message, values);
+            Register(DiagnosticType.Warning, instance, track, prj, message, values);
             
         }
 
-        public static void Warning(string instance, E.Projects prj, string message, params object[] values)
+        public static void Warning(string instance, G.Projects prj, string message, params object[] values)
         {
-            Register(DiagnosticType.Warning, instance, prj, -1, message, values);
+            Register(DiagnosticType.Warning, instance, null, prj, message, values);
         }
         #endregion
 
         #region Debug
-        public static void Debug(string instance, E.Projects prj, int track, string message, params object[] values)
+        public static void Debug(string log, string track, G.Projects prj, string message, params object[] values)
         {
             if (R.DebugMode)
-                Register(DiagnosticType.Debug, instance, prj, track, message, values);
+                Register(DiagnosticType.Debug, log, track, prj, message, values);
         }
 
-        public static void Debug(string instance, E.Projects prj, string message, params object[] values)
+        public static void Debug(string log, G.Projects prj, string message, params object[] values)
         {
             if (R.DebugMode)
-                Register(DiagnosticType.Debug, instance, prj, -1, message, values);
+                Register(DiagnosticType.Debug, log, null, prj, message, values);
+        }
+
+        public static void Debug(int hashCode, G.Projects prj, string message, params object[] values)
+        {
+            if (R.DebugMode)
+                Register(DiagnosticType.Debug, $"Instance:{hashCode.ToString("000000")}", null, prj, message, values);
         }
         #endregion
 
         #region Track
-        public static int Track(params object[] values)
+        public static string Track(params object[] values)
         {
             var track = k.Security.Id(values);
             var file = $"{path}\\{track}.track";
-           
-            Shell.File.Save(Array.ConvertAll(values, x => x.ToString()), file, true, true);
+
+            if(System.IO.File.Exists(file))
+            {
+                var text = $"Track replay date: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}";
+                Shell.File.Save(text, file, false, true);
+            }
+            else
+            {
+                var list = new List<object>();
+                list.Add($"Track date: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}");
+                
+                foreach(var value in values)
+                {
+                    if (value.GetType().BaseType == typeof(Array))
+                        foreach (var value1 in (object[])value)
+                            list.Add(value1);
+                    else
+                        list.Add(value);
+                }
+
+                Shell.File.Save(Array.ConvertAll(list.ToArray(), x => x.ToString()), file, false, true);
+            }
 
             return track;
         }
 
-        public static int Track(Exception ex)
+        public static string Track(Exception ex)
         {
             var inner = ex;
             var list = new List<object>();
 
+            var limit = 0;
             while (inner != null)
             {
-                list.Add(ex.Message == null ? "- No Message" : ex.Message);
-                list.Add(ex.StackTrace == null? "- No StackTrace" : ex.StackTrace);
-                if (R.DebugMode) list.Add(ex.Source == null ? "No Source" : ex.Source);
+                if(!String.IsNullOrEmpty(ex.Message))
+                {
+                    if(limit > 0)
+                        list.Add("\n>>>>> INNER EXCEPTION <<<<<");
+                    else
+                        list.Add(">>>>> EXCEPTION <<<<<");
 
-                list.Add(ex.InnerException == null ? "- No InnerException" : "InnerException\n");
+                    list.Add(ex.Message);
+                    list.Add(ex.StackTrace == null ? "> No StackTrace" : ex.StackTrace);
+                    if (R.DebugMode) list.Add(ex.Source == null ? "> No Source" : ex.Source);
+                }
+                
+                inner = inner.InnerException;
 
-                inner = ex.InnerException;
+                if (++limit > 10)
+                {
+                    list.Add("Inner exception was limited 10 levels");
+                    break;
+                }
             }
 
+            list.Add("\n");
             return Track(list.ToArray());
         }
         #endregion
 
-        private static void Register(DiagnosticType dtype, string log, E.Projects prj, int track, string message, params object[] values)
+        private static void Register(DiagnosticType dtype, string log, string track, G.Projects prj, string message, params object[] values)
         {
-            var file = $"{path}\\{DateTime.Now.ToString("yyMMdd_hh")}00.log";
+#if DEBUG 
+            var file = $"{path}\\{DateTime.Now.ToString("yyMMdd")}_0000.log";
+#else
+            var file = $"{path}\\{DateTime.Now.ToString("yyMMdd_HH")}00.log";
+#endif
 
             var time = DateTime.Now.ToString("hh:mm:ss");
             var type = dtype.ToString() + new String(' ', 7 - dtype.ToString().Length);
-            var trck = track >= 0 ? $"Track:{track.ToString("00000")}. " : null;
+            var trck = !String.IsNullOrEmpty(track) ? $"Track:{track} " : null;
             var msg = Dynamic.StringFormat(message, values);
 
-            var line = $"{time} {type} - {trck}{msg}";
+            var line = $"{time} {type} - {trck}{prj}.{log}: {msg}";
 
             Shell.File.Save(line, file, false, true);
         }

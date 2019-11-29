@@ -1,10 +1,12 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using SAPbobsCOM;
+
 
 namespace k.Tests
 {
     [TestClass]
-    public class UnitTest1
+    public class Win32Test
     {
 
         public static void Main()
@@ -18,6 +20,12 @@ namespace k.Tests
             KCore.List();
             KCore.Shell();
             KCore.KExceptionTest();
+
+            // SAPDI
+            KCore.SAPDI();
+            KCore.SAPDIServer();
+
+            return;
         }
 
 
@@ -26,32 +34,32 @@ namespace k.Tests
         {
             public static void KExceptionTest()
             {
-                try
-                {
-                    throw new k.KException("Test", E.Message.GenerelError, "test");
-                }
-                catch(BaseException be)
-                {
-                    var msg = be.Message;
-                }
+                //try
+                //{
+                //    throw new k.KException("Test", E.Message.GenerelError_1, "test");
+                //}
+                //catch(BaseException be)
+                //{
+                //    var msg = be.Message;
+                //}
 
-                try
-                {
-                    throw new k.KException("Test", new System.Exception("ex"));
-                }
-                catch (BaseException be)
-                {
-                    var msg = be.Message;
-                }
+                //try
+                //{
+                //    throw new k.KException("Test", new System.Exception("ex"));
+                //}
+                //catch (BaseException be)
+                //{
+                //    var msg = be.Message;
+                //}
 
-                try
-                {
-                    throw new k.KException("Test", E.Message.TestMessage, "test");
-                }
-                catch (BaseException be)
-                {
-                    var msg = be.Message;
-                }
+                //try
+                //{
+                //    throw new k.KException("Test", E.Message.TestMessage, "test");
+                //}
+                //catch (BaseException be)
+                //{
+                //    var msg = be.Message;
+                //}
 
             }
 
@@ -71,7 +79,7 @@ namespace k.Tests
             {
                 
 
-                var par = new k.Lists.ParametersList();
+                var par = new k.Lists.GenericList();
                 par.Set("a", "test1");
                 par.Set("A", "test2");
                 if (par["a"] != "test2")
@@ -134,23 +142,43 @@ namespace k.Tests
 
             }
 
+            public static void SAPDI()
+            {
+                k.StartInit.Starting(new k.sap.di.Init());
+
+                var dbcred = new k.db.Clients.SqlCredential("DESKTOP-SPOLPCU", "SBODemoGB", "sa", "easy1234");
+                var sapcred = new k.sap.SAPCredential(BoDataServerTypes.dst_MSSQL2017, dbcred, BoSuppLangs.ln_English_Gb, "manager", "manager");
+
+                sap.DI.Connect(sapcred);
+            }
+
+            public static void SAPDIServer()
+            {
+                k.StartInit.Starting(new k.sap.diserver.Init());
+
+                var dbcred = new k.db.Clients.SqlCredential("DESKTOP-SPOLPCU", "SBODemoGB", "sa", "easy1234");
+                var sapcred = new k.sap.SAPCredential(BoDataServerTypes.dst_MSSQL2017, dbcred, BoSuppLangs.ln_English_Gb, "manager", "manager");
+
+
+            }
+
             public static void Shell()
             {
                 // Directory
-                var folder = k.Shell.Directory.AppDataFolder(E.Projects.Tests);
+                var folder = k.Shell.Directory.AppDataFolder(G.Projects.Tests);
                 if(!System.IO.Directory.Exists(folder))
                     throw new InternalTestFailureException();
-                folder = k.Shell.Directory.AppDataFolder(E.Projects.Tests, "a");
+                folder = k.Shell.Directory.AppDataFolder(G.Projects.Tests, "a");
                 if (!System.IO.Directory.Exists(folder))
                     throw new InternalTestFailureException();
 
-                k.Shell.Directory.DelTree(E.Projects.Tests, k.Shell.Directory.SpecialFolder.AppData, "a");
-                folder = k.Shell.Directory.AppDataFolder(E.Projects.Tests, "a", "b");
+                k.Shell.Directory.DelTree(G.Projects.Tests, k.Shell.Directory.SpecialFolder.AppData, "a");
+                folder = k.Shell.Directory.AppDataFolder(G.Projects.Tests, "a", "b");
                 if (!System.IO.Directory.Exists(folder))
                     throw new InternalTestFailureException();
 
               
-                folder = k.Shell.Directory.AppDataFolder(E.Projects.Tests, "a", "b");
+                folder = k.Shell.Directory.AppDataFolder(G.Projects.Tests, "a", "b");
                 if (!System.IO.Directory.Exists(folder))
                     throw new InternalTestFailureException();
 
@@ -185,9 +213,9 @@ namespace k.Tests
     {
         public void Load(string id)
         {
-            base.Load<Credential>(id);
+            base.Load(id);
         }
-        public Credential() : base(E.Projects.Tests)
+        public Credential() : base(G.Projects.Tests)
         {
            
 

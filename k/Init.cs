@@ -13,7 +13,7 @@ namespace k
 
         public void Init10_Dependency()
         {
-            k.Diagnostic.Debug(control, E.Projects.KCore, "Debug mode is enabled");
+            k.Diagnostic.Debug(control, R.Project, "Debug mode is enabled");
             Content.Language.en_GB.Culture = new CultureInfo("en-GB");
         }
 

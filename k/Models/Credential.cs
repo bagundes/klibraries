@@ -17,14 +17,14 @@ namespace k.Models
         public string User { get; set; }
         public string Password { get; set; }
         public DateTime DueDate { get; set; }
-        public k.Lists.ParametersList Parameters { get; set; } = new Lists.ParametersList();
+        public k.Lists.GenericList Parameters { get; set; } = new Lists.GenericList();
         public  List<string> Roles { get; set; } = new List<string>();
-        public Credential(E.Projects project) 
+        public Credential(G.Projects project) 
         {
             path = Shell.Directory.AppDataFolder(project, LOG.ToLower());
         }
 
-        protected void Load<T>(string id) where T : Credential
+        protected void Load(string id)
         {
             var file = Shell.File.Find(path, $"{id}.{LOG.ToLower()}").FirstOrDefault();
             var json = Shell.File.Load(file);
@@ -32,7 +32,7 @@ namespace k.Models
             if (!R.DebugMode)
                 json = Security.Decrypt(json, null);
 
-            var foo = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+            var foo = Newtonsoft.Json.JsonConvert.DeserializeObject(json, this.GetType());
 
             foreach (var p in k.Reflection.GetProperties(foo))
                 k.Reflection.SetValue(this, p.Name, p.GetValue(foo));
@@ -60,7 +60,7 @@ namespace k.Models
             Parameters.Set(key, value);
         }
 
-        public virtual object GetParameter(string key, string msgerror)
+        public virtual Dynamic GetParameter(string key, string msgerror = null)
         {
             Dynamic val;
             if (!Parameters.Get(key, out val) && !String.IsNullOrEmpty(msgerror))
@@ -98,5 +98,34 @@ namespace k.Models
             return k.Security.Encrypt(Password, User);
         }
 
+
+        public string DataInfo()
+        {
+            var cred = (Credential)Clone();
+            if (!R.DebugMode)
+            {
+                var passwd = String.IsNullOrEmpty(cred.Password) ? "null" : cred.Password.Substring(0, 2) + new string('*', cred.Password.Length - 2);
+                cred.Password = passwd;
+
+                foreach(var key in cred.Parameters.GetKeys())
+                {
+                    if(key.Contains("pass"))
+                    {
+                        var pass = cred.GetParameter(key).ToString();
+                        var passwd1 = String.IsNullOrEmpty(pass) ? "null" : pass.Substring(0, 2) + new string('*', pass.Length - 2);
+                        cred.SetParameter(key, passwd1);
+                    }
+                }
+            }
+
+
+            return JsonConvert.SerializeObject(cred,
+                new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    Formatting = Formatting.Indented
+                });
+
+        }
     }
 }

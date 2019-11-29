@@ -11,7 +11,7 @@ namespace k
     {
         private static System.Reflection.Assembly Assembly => System.Reflection.Assembly.GetExecutingAssembly();
         public static string CompanyName => Content.ConfigGlobal.CompanyName;
-        public static E.Projects Project => E.Projects.KCore;
+        public static k.G.Projects Project => k.G.Projects.KCore;
 
 #if DEBUG
         public static bool DebugMode => true;
@@ -25,7 +25,7 @@ namespace k
 
         public class App
         {
-            public static string Name => "KCore";
+            public static string Name => "K Library Core";
             public static string Namespace => "KC";
             public static Version Version => Assembly.GetName().Version;
             public static int ID => Version.Major;
