@@ -1,70 +1,76 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace k.Stored
 {
     public static class ConfigFile
     {
-        private static string LOG => typeof(ConfigFile).Name;
+        public const string CONFIGGlobalFileName = "config.json";
+        private static string CONFIGGlobalDevFileName
+        {
+            get
+            {
+                var foo = CONFIGGlobalFileName.Split('.');
+                var configDevFile = foo[0] + "-dev." + foo[1];
+                return configDevFile;
+            }
+        }
+        private static string PATH => k.R.App.Path;
 
-        private static Lists.GenericList Params = new Lists.GenericList();
+        private static k.Lists.MyList bucket;
 
-        //internal static void Loading()
-        //{
-        //    //if (k.Shell.File.Find())
+        private static void LoadingGlobal()
+        {
+            if(bucket == null)
+            {
+                var configfile = k.Shell.File.Find(PATH, CONFIGGlobalFileName, System.IO.SearchOption.TopDirectoryOnly).FirstOrDefault();
 
+#if DEBUG
+                if (k.Shell.File.Find(PATH, CONFIGGlobalDevFileName, System.IO.SearchOption.TopDirectoryOnly).Length < 1)
+                {                    
+                    System.IO.File.Copy(configfile.FullName, configfile.DirectoryName + "\\" + CONFIGGlobalDevFileName);
+                    configfile = new System.IO.FileInfo(configfile.DirectoryName + "\\" + CONFIGGlobalDevFileName);
 
-        //    //    var json = k.Shell.File.Load();
-        //}
+                }
+#endif
+                var json = System.IO.File.ReadAllText(configfile.FullName);
 
+                var dic = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
 
+                var a = new object();
+                bucket = new k.Lists.MyList(dic);
+            }
+        }
 
-        //public PropertiesList_v1(string file)
-        //{
-        //    var json = System.IO.File.ReadAllText(file);
-        //    properties = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
-        //}
+        public static Dynamic GetGlobalValue(string key)
+        {
+            LoadingGlobal();
+#if DEBUG
+            if (!bucket.Contains(key))
+                SetGlobal(key, null);
+#endif
 
-        ///// <summary>
-        ///// Get the parameter value
-        ///// </summary>
-        ///// <param name="key">Key</param>
-        ///// <param name="msgerror">Create exception when the Key is not exists</param>
-        ///// <returns></returns>
-        //public Dynamic Get(string key, string msgerror = null)
-        //{
+            return bucket[key];
 
-        //    if (properties != null && properties.Where(t => t.Key.Equals(key, StringComparison.CurrentCultureIgnoreCase)).Any())
-        //        return new Dynamic(properties.Where(t => t.Key.ToUpper() == key.ToUpper()).Select(t => t.Value).FirstOrDefault());
-        //    else
-        //    {
-        //        if (!String.IsNullOrEmpty(msgerror))
-        //            throw new BaseException(LOG, C.MessageEx.StoredCacheError10_1, msgerror);
-        //        else
-        //            return Dynamic.Empty;
-        //    }
-        //}
+        }
 
-        //public Dictionary<string, dynamic> GetList()
-        //{
-        //    return new Dictionary<string, dynamic>(properties);
-        //}
+        public static void SetGlobal(string key, object value)
+        {
+            LoadingGlobal();
+            bucket.Set(key, value);
+            var json = bucket.ToJson();
 
-        //public void Set(string key, dynamic value)
-        //{
-        //    if (properties == null)
-        //        properties = new Dictionary<string, dynamic>();
+            var configfile = k.Shell.File.Find(PATH, CONFIGGlobalFileName, System.IO.SearchOption.TopDirectoryOnly).FirstOrDefault();
 
-        //    if (properties.Where(t => t.Key.ToUpper() == key.ToUpper()).Any())
-        //        properties[key] = value;
-        //    else
-        //        properties.Add(key, value);
-        //}
+#if DEBUG
+            
+            configfile = new System.IO.FileInfo(PATH + "\\" + CONFIGGlobalDevFileName);
+#endif
 
-        //public bool ContainsKey(string key)
-        //{
-        //    return properties.ContainsKey(key);
-        //}
+            k.Shell.File.Save(bucket.ToJson(), configfile.FullName, true);
+        }
     }
 }

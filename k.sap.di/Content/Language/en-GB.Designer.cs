@@ -77,5 +77,14 @@ namespace k.sap.di.Content.Language {
                 return ResourceManager.GetString("M00001_2", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The application needs to create/update table and fields..
+        /// </summary>
+        internal static string M00002_0 {
+            get {
+                return ResourceManager.GetString("M00002_0", resourceCulture);
+            }
+        }
     }
 }

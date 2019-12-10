@@ -7,18 +7,39 @@ namespace k.Shell
 {
     public static class Directory
     {
-        private static string LOG => typeof(Directory).Name;
         public enum SpecialFolder
         {
             AppData = 26,
             TempData = 99,
         }
 
+
+        public static System.IO.DirectoryInfo GetSpecialFolder(SpecialFolder sfolder)
+        {
+            System.IO.DirectoryInfo di;
+            switch (sfolder)
+            {
+                case SpecialFolder.AppData:
+                    di = new DirectoryInfo(R.App.AppData); break;
+                case SpecialFolder.TempData:
+                    di = new DirectoryInfo(R.App.AppData); break;
+                default:
+                    throw new NotImplementedException($"Cannot defined {sfolder.ToString()} folder in Directory.DelTree");
+
+            }
+
+            if (di.Exists)
+                Folder(di.FullName);
+
+            return di;
+        }
+
+
         public static string TempDataFolder(G.Projects project, params string[] folders)
         {
             var path = new string[2];
 
-            path[0] = $"{System.IO.Path.GetTempPath()}{R.CompanyName}";
+            path[0] = R.App.AppTemp;
             path[1] = project.ToString().ToLower();            
 
             return Folder(Path.Combine(path), folders);
@@ -27,8 +48,8 @@ namespace k.Shell
         public static string AppDataFolder(G.Projects project, params string[] folders)
         {
             var path = new string[2];
-
-            path[0] = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var b = R.App.AppData;
+            path[0] = R.App.AppData;
             path[1] = project.ToString();
 
             return Folder(Path.Combine(path), folders);
@@ -45,18 +66,7 @@ namespace k.Shell
             var path = new string[folders.Length + 2];
             folders.CopyTo(path, 2);
 
-            switch(special)
-            {
-                case SpecialFolder.AppData:
-                    path[0] = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData); break;
-                case SpecialFolder.TempData:
-                    path[0] = $"{System.IO.Path.GetTempPath()}{R.CompanyName}"; break;
-                default:
-                    throw new NotImplementedException($"Cannot defined {special.ToString()} folder in Directory.DelTree");
-
-            }
-
-            path[0] = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            path[0] = GetSpecialFolder(special).FullName;
             path[1] = project.ToString();
 
             var folder = Path.Combine(path);

@@ -5,7 +5,6 @@ namespace k.sap.diserver
 {
     public class Init : IInit
     {
-        private string control = DateTime.Now.ToString("ffffff");
         private string LOG => this.GetType().Name;
         public void Init10_Dependency()
         {

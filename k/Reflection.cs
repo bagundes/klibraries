@@ -8,6 +8,7 @@ namespace k
 { 
     public class Reflection
     {
+        private static string LOG => typeof(Reflection).Name;
         /// <summary>
         /// Set value in the property.
         /// </summary>
@@ -36,7 +37,7 @@ namespace k
             }
             catch (Exception ex)
             {
-                //KCore.Diagnostic.Error(R.ID, model.LOG, ex.Message, ex.StackTrace, ex.Source + $"\nParameters:\n\tmodel:{typeof(T).Name}, name:{name} and value:{value}");
+                k.Diagnostic.Error(LOG, R.Project, ex);
                 return false;
             }
         }
@@ -108,7 +109,6 @@ namespace k
             return res.ToArray();
         }
 
-
         public static FieldInfo[] GetFields(Object obj)
         {
             var p = obj.GetType();
@@ -139,8 +139,6 @@ namespace k
 
             return res.ToArray();
         }
-
-
 
         public static PropertyInfo[] GetProperties(Object obj)
         {

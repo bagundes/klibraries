@@ -10,11 +10,11 @@ namespace k.sap
     {
         private static string LOG => typeof(DIServer).Name;
 
-        private static k.Lists.SpecificList<String> Tokens = new Lists.SpecificList<string>();
+        private static k.Lists.MyList Tokens = new k.Lists.MyList();
 
         public static bool IsConnected(string key)
         {
-            string token;
+            Dynamic token;
             if (!Tokens.Get(key, out token))
             {
                 var diServer = new SBODI_Server.Node() as SBODI_Server.INode;

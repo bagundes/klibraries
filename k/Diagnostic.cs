@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace k
 {
     public static class Diagnostic
     {
-        private static string path => Shell.Directory.TempDataFolder(R.Project, "log");
+        private static string Path => Shell.Directory.TempDataFolder(R.Project, "log");
 
         private enum DiagnosticType
         {
@@ -35,9 +37,9 @@ namespace k
             var zippath = Shell.Directory.TempDataFolder(R.Project);
 
             var lastAccessLog = R.DebugMode ? DateTime.Now.AddMinutes(-10) : DateTime.Now.AddDays(-1);
-            var lastAccessZip = R.DebugMode ? DateTime.Now.AddMinutes(-30) : DateTime.Now.AddDays(-int.Parse(Content.ConfigGlobal.ClearLogThanNDays));
+            var lastAccessZip = R.DebugMode ? DateTime.Now.AddMinutes(-30) : DateTime.Now.AddDays(-P.ClearLogThanNDays);
 
-            var files_log = Shell.File.Find(path, "*", System.IO.SearchOption.AllDirectories, lastAccessLog);
+            var files_log = Shell.File.Find(Path, "*", System.IO.SearchOption.AllDirectories, lastAccessLog);
 
             Shell.File.ZipFiles(files_log, $"{zippath}\\log_{DateTime.Now.ToString("yyyyMMdd_hhmm")}.zip");
             Shell.File.Delete(files_log);
@@ -75,7 +77,7 @@ namespace k
         /// <param name="prj">Project name</param>
         /// <param name="message">Message</param>
         /// <param name="values">Values to string format</param>
-        public static void Error(string instance, G.Projects prj, string message, params object[] values)
+        public static void Error(object instance, G.Projects prj, string message, params object[] values)
         {
             Register(DiagnosticType.Error, instance, null, prj, message, values);
         }
@@ -92,13 +94,12 @@ namespace k
 
         /// <param name="message">Message</param>
         /// <param name="values">Values to string format</param>
-        public static void Warning(string instance, string track, G.Projects prj, string message, params object[] values)
+        public static void Warning(object instance, string track, G.Projects prj, string message, params object[] values)
         {
-            Register(DiagnosticType.Warning, instance, track, prj, message, values);
-            
+            Register(DiagnosticType.Warning, instance, track, prj, message, values); 
         }
 
-        public static void Warning(string instance, G.Projects prj, string message, params object[] values)
+        public static void Warning(object instance, G.Projects prj, string message, params object[] values)
         {
             Register(DiagnosticType.Warning, instance, null, prj, message, values);
         }
@@ -122,13 +123,42 @@ namespace k
             if (R.DebugMode)
                 Register(DiagnosticType.Debug, $"Instance:{hashCode.ToString("000000")}", null, prj, message, values);
         }
+
+        public static void Debug(int hashCode, string track, G.Projects prj, string message, params object[] values)
+        {
+            if (R.DebugMode)
+                Register(DiagnosticType.Debug, $"Instance:{hashCode.ToString("000000")}", track, prj, message, values);
+        }
+
+        public static void Debug(KModel model, G.Projects prj, string message, params object[] values)
+        {
+            if (R.DebugMode)
+                Register(DiagnosticType.Debug, $"Instance:{model.GetHashCode()}", null, prj, message, values);
+        }
         #endregion
 
         #region Track
+        public static string TrackObj(object value)
+        {
+
+            var formatting = Formatting.Indented;
+
+            var json = JsonConvert.SerializeObject(value,
+                new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    Formatting = formatting
+                });
+
+            return Track(json);
+        }
+
+
         public static string Track(params object[] values)
         {
             var track = k.Security.Id(values);
-            var file = $"{path}\\{track}.track";
+            track += new string('0', track.Length < 6 ? 6 - track.Length : 0);
+            var file = $"{Path}\\track\\{track}.track";
 
             if(System.IO.File.Exists(file))
             {
@@ -137,14 +167,19 @@ namespace k
             }
             else
             {
-                var list = new List<object>();
-                list.Add($"Track date: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}");
-                
-                foreach(var value in values)
+                var list = new List<object>
+                {
+                    $"Track date: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}"
+                };
+
+                foreach (var value in values)
                 {
                     if (value.GetType().BaseType == typeof(Array))
+                    {
+                        int i = 0;
                         foreach (var value1 in (object[])value)
-                            list.Add(value1);
+                            list.Add($"{i++.ToString("0")}. " + value1);
+                    }
                     else
                         list.Add(value);
                 }
@@ -171,8 +206,8 @@ namespace k
                         list.Add(">>>>> EXCEPTION <<<<<");
 
                     list.Add(ex.Message);
-                    list.Add(ex.StackTrace == null ? "> No StackTrace" : ex.StackTrace);
-                    if (R.DebugMode) list.Add(ex.Source == null ? "> No Source" : ex.Source);
+                    list.Add(ex.StackTrace ?? "> No StackTrace");
+                    if (R.DebugMode) list.Add(ex.Source ?? "> No Source");
                 }
                 
                 inner = inner.InnerException;
@@ -189,10 +224,10 @@ namespace k
         }
         #endregion
 
-        private static void Register(DiagnosticType dtype, string log, string track, G.Projects prj, string message, params object[] values)
+        private static void Register(DiagnosticType dtype, object log, string track, G.Projects prj, string message, params object[] values)
         {
 #if DEBUG 
-            var file = $"{path}\\{DateTime.Now.ToString("yyMMdd")}_0000.log";
+            var file = $"{Path}\\{DateTime.Now.ToString("yyMMdd")}_0000.log";
 #else
             var file = $"{path}\\{DateTime.Now.ToString("yyMMdd_HH")}00.log";
 #endif
@@ -206,7 +241,5 @@ namespace k
 
             Shell.File.Save(line, file, false, true);
         }
-
-        private static void OnLine() { }
     }
 }

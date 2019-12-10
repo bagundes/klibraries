@@ -123,4 +123,7 @@
   <data name="M00001_2" xml:space="preserve">
     <value>It is not possible to connect SAP on {0} server. {1}</value>
   </data>
+  <data name="M00002_0" xml:space="preserve">
+    <value>The application needs to create/update table and fields.</value>
+  </data>
 </root>

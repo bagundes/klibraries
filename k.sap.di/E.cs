@@ -10,7 +10,7 @@ namespace k.sap.di
         {
             GenerelError_1 = 0,
             ErrorConnectDI_2 = 1,
-
+            CreateTableFields_0 = 2,
         }
     }
 }

@@ -158,13 +158,20 @@ namespace k.Shell
             return false;
         }
         #endregion
+        public static void Delete(FileInfo file)
+        {
+            System.IO.File.Delete(file.FullName);
+
+            if (R.DebugMode)
+                Diagnostic.Debug(typeof(File).Name, R.Project, "File deleted: {0}", file.FullName);            
+        }
 
         public static void Delete(FileInfo[] files)
         {
             foreach(var file in files)
                 System.IO.File.Delete(file.FullName);
-            
-            if(R.DebugMode && files.Length > 0)
+
+            if (R.DebugMode && files.Length > 0)
             {
                 var track = Diagnostic.Track(Array.ConvertAll(files, t => t.FullName));
                 Diagnostic.Debug(typeof(File).Name, R.Project, track, "Deleted {0} files", files.Length);

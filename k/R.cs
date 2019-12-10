@@ -11,6 +11,7 @@ namespace k
     {
         private static System.Reflection.Assembly Assembly => System.Reflection.Assembly.GetExecutingAssembly();
         public static string CompanyName => Content.ConfigGlobal.CompanyName;
+        public static string Namespace => Content.ConfigGlobal.Namespace;
         public static k.G.Projects Project => k.G.Projects.KCore;
 
 #if DEBUG
@@ -20,18 +21,21 @@ namespace k
 #endif
         public class Security
         {
-            public static string MasterKey => Content.ConfigGlobal.MasterKey;
+            public static string MasterKey => P.MasterKey;
         }
 
         public class App
-        {
+        {           
+
+            public static string AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            public static string AppTemp => $"{System.IO.Path.GetTempPath()}{R.CompanyName}";
             public static string Name => "K Library Core";
             public static string Namespace => "KC";
             public static Version Version => Assembly.GetName().Version;
             public static int ID => Version.Major;
             public static string Path => System.Environment.CurrentDirectory;
 
-            public static CultureInfo Culture = CultureInfo.CreateSpecificCulture(Content.ConfigGlobal.CultureLanguage);
+            public static CultureInfo Culture => CultureInfo.CreateSpecificCulture(Stored.ConfigFile.GetGlobalValue("CultureLanguage"));
 
             public static string[] Resources => Assembly.GetManifestResourceNames();
 

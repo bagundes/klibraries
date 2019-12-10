@@ -4,10 +4,14 @@ using System.Text;
 
 namespace k
 {
-    public partial class Dynamic
+    public partial class Dynamic : IEquatable<Dynamic>
     {
         public readonly object Value;
 
+        public Dynamic()
+        {
+            Value = null;
+        }
         public Dynamic(object value)
         {
             Value = value;
@@ -24,15 +28,19 @@ namespace k
             return v.ToString();
         }
 
-
         public static implicit operator Dynamic(int v)
+        {
+            return new Dynamic(v);
+        }
+
+        public static explicit operator Dynamic(Int64 v)
         {
             return new Dynamic(v);
         }
 
         public static implicit operator int(Dynamic v)
         {
-            return v.ToInt();
+            return v.ToInt(0);
         }
 
         public static implicit operator Dynamic(DateTime v)
@@ -44,6 +52,8 @@ namespace k
         {
             return v.ToDateTime();
         }
+
+
         #endregion
 
         #region Convert to
@@ -54,7 +64,12 @@ namespace k
         }
         public override string ToString()
         {
-            return Value.ToString();
+            return Value == null ? String.Empty : Value.ToString().Trim();
+        }
+
+        public object ToObject()
+        {
+            return Value;
         }
 
         public int ToInt(int def = 0)
@@ -69,11 +84,22 @@ namespace k
             }
         }
 
+        public int? ToIntOrNull()
+        {
+            int val;
+            if (int.TryParse(this.ToString(), out val))
+                return val;
+            else
+                return null;
+        }
+
         public bool ToBool()
         {
             var val = Value.ToString().ToUpper();
             switch(val)
             {
+                case "T":
+                case "TRUE":
                 case "Y":
                 case "YES":
                 case "S":
@@ -102,7 +128,6 @@ namespace k
             var val = Value.ToString();
             return Dynamic.StringFormat(val, values);
         }
-
         public string Decrypt()
         {
             return k.Security.Decrypt(ToString());
@@ -110,7 +135,12 @@ namespace k
         #endregion
 
         #region Validation
+        public bool Equals(Dynamic other) => Value.ToString().Equals(other.ToString());
 
+        public override int GetHashCode()
+        {
+            return -1937169414 + EqualityComparer<object>.Default.GetHashCode(Value);
+        }
         #endregion
 
         #region Static
@@ -148,8 +178,10 @@ namespace k
 
             return format;
         }
+
+        //public static bool operator ==(Dynamic a, Dynamic b) => a.Equals(b);
+
+        //public static bool operator !=(String a, String b) => !a.Equals(b);
         #endregion
     }
-
-
 }

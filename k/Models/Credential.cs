@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System.Threading;
 
 namespace k.Models
 {
@@ -12,12 +13,13 @@ namespace k.Models
         protected string LOG => this.GetType().Name;
         public readonly string path;
 
+
         public string Host { get; set; }
         public string Schema { get; set; }
         public string User { get; set; }
         public string Password { get; set; }
         public DateTime DueDate { get; set; }
-        public k.Lists.GenericList Parameters { get; set; } = new Lists.GenericList();
+        public k.Lists.MyList Parameters { get; set; } = new k.Lists.MyList();
         public  List<string> Roles { get; set; } = new List<string>();
         public Credential(G.Projects project) 
         {
@@ -27,6 +29,12 @@ namespace k.Models
         protected void Load(string id)
         {
             var file = Shell.File.Find(path, $"{id}.{LOG.ToLower()}").FirstOrDefault();
+            if (file == null)
+            {
+                k.Diagnostic.Error(LOG, R.Project, "Cannot possible to load {0} id in {1}", id, path);
+                throw new KException(LOG, E.Message.CredentialId_0);
+            }
+            
             var json = Shell.File.Load(file);
 
             if (!R.DebugMode)
@@ -36,6 +44,12 @@ namespace k.Models
 
             foreach (var p in k.Reflection.GetProperties(foo))
                 k.Reflection.SetValue(this, p.Name, p.GetValue(foo));
+
+            if (DueDate != (new DateTime()) && DueDate < DateTime.Now)
+            {
+                k.Shell.File.Delete(file);
+                throw new KException(LOG, E.Message.CredentialExpired_0);
+            }
         }
 
         /// <summary>
@@ -98,8 +112,11 @@ namespace k.Models
             return k.Security.Encrypt(Password, User);
         }
 
-
-        public string DataInfo()
+        /// <summary>
+        /// Details about the data information
+        /// </summary>
+        /// <returns></returns>
+        public string DetailsFull()
         {
             var cred = (Credential)Clone();
             if (!R.DebugMode)
@@ -107,7 +124,7 @@ namespace k.Models
                 var passwd = String.IsNullOrEmpty(cred.Password) ? "null" : cred.Password.Substring(0, 2) + new string('*', cred.Password.Length - 2);
                 cred.Password = passwd;
 
-                foreach(var key in cred.Parameters.GetKeys())
+                foreach(var key in cred.Parameters.Keys)
                 {
                     if(key.Contains("pass"))
                     {
@@ -126,6 +143,40 @@ namespace k.Models
                     Formatting = Formatting.Indented
                 });
 
+        }
+
+        /// <summary>
+        /// Return information about the credential
+        /// </summary>
+        /// <returns></returns>
+        public string DetailsSimple()
+        {
+            return $"{User}@{Host}.{Schema}";
+        }
+    }
+
+    internal static class CredentialControl
+    {
+        internal static void ClearSchedule()
+        {
+            var wait = R.DebugMode ? TimeSpan.FromDays(1) : TimeSpan.FromHours(1);
+
+            do
+            {
+                ClearCredentials();
+
+                Thread.Sleep((int)wait.TotalMilliseconds);
+            } while (true);
+        }
+
+        public static void ClearCredentials()
+        {
+
+            var path = Shell.Directory.GetSpecialFolder(Shell.Directory.SpecialFolder.AppData);
+
+            var files = Shell.File.Find(path.FullName, "*.credential", System.IO.SearchOption.AllDirectories, DateTime.Now.AddDays(-30));
+            
+            Shell.File.Delete(files);           
         }
     }
 }

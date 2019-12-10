@@ -10,6 +10,7 @@
     <FileVersion>1000.0.0.0</FileVersion>
     <PackageId>k_bfagundes</PackageId>
     <Description>Kurumin core library</Description>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,6 +40,12 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>en-GB.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

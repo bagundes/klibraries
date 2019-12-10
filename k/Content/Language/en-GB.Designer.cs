@@ -68,5 +68,41 @@ namespace k.Content.Language {
                 return ResourceManager.GetString("M00000_1", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not load credential: ID not found..
+        /// </summary>
+        internal static string M00001_0 {
+            get {
+                return ResourceManager.GetString("M00001_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Credential expired..
+        /// </summary>
+        internal static string M00002_0 {
+            get {
+                return ResourceManager.GetString("M00002_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The bucket is limited {0} columns..
+        /// </summary>
+        internal static string M00003_1 {
+            get {
+                return ResourceManager.GetString("M00003_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The bucket is limited {0} rows..
+        /// </summary>
+        internal static string M00004_1 {
+            get {
+                return ResourceManager.GetString("M00004_1", resourceCulture);
+            }
+        }
     }
 }

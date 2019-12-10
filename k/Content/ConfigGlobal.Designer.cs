@@ -61,15 +61,6 @@ namespace k.Content {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 7.
-        /// </summary>
-        internal static string ClearLogThanNDays {
-            get {
-                return ResourceManager.GetString("ClearLogThanNDays", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Teamsoft ltd.
         /// </summary>
         internal static string CompanyName {
@@ -79,29 +70,11 @@ namespace k.Content {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to en-GB.
+        ///   Looks up a localized string similar to TS.
         /// </summary>
-        internal static string CultureLanguage {
+        internal static string Namespace {
             get {
-                return ResourceManager.GetString("CultureLanguage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 0.
-        /// </summary>
-        internal static string DebugMode {
-            get {
-                return ResourceManager.GetString("DebugMode", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 1234567890.
-        /// </summary>
-        internal static string MasterKey {
-            get {
-                return ResourceManager.GetString("MasterKey", resourceCulture);
+                return ResourceManager.GetString("Namespace", resourceCulture);
             }
         }
     }

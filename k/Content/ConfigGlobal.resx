@@ -117,19 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="ClearLogThanNDays" xml:space="preserve">
-    <value>7</value>
-  </data>
   <data name="CompanyName" xml:space="preserve">
     <value>Teamsoft ltd</value>
   </data>
-  <data name="CultureLanguage" xml:space="preserve">
-    <value>en-GB</value>
-  </data>
-  <data name="DebugMode" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="MasterKey" xml:space="preserve">
-    <value>1234567890</value>
+  <data name="Namespace" xml:space="preserve">
+    <value>TS</value>
   </data>
 </root>

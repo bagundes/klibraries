@@ -13,7 +13,10 @@ namespace k.db.Clients
         {
         }
 
-
+        public SqlCredential(string id) : base(k.G.Projects.KDB)
+        {
+            base.Load(id);
+        }
         public SqlCredential(string server, string schema, string user, string passwd, int port = 1433) : base(k.G.Projects.KDB)
         {
             base.Host = server;

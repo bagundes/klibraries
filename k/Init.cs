@@ -10,6 +10,7 @@ namespace k
     {
         private string control = DateTime.Now.ToString("ffffff");
         private Thread logFileThread;
+        private Thread credFileThread;
 
         public void Init10_Dependency()
         {
@@ -20,6 +21,7 @@ namespace k
 
         public void Init20_Config()
         {
+            // Loading config file
             
         }
 
@@ -29,11 +31,16 @@ namespace k
             logFileThread = new Thread(new ThreadStart(Diagnostic.ClearLogSchedule));
             logFileThread.Start();
 
+            // Credentials
+            credFileThread = new Thread(new ThreadStart(k.Models.CredentialControl.ClearSchedule));
+            credFileThread.Start();
+
         }
 
         public void Init60_End()
         {
             logFileThread.Abort();
+            credFileThread.Abort();
         }
     }
 }

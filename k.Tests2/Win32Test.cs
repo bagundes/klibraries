@@ -10,11 +10,10 @@ namespace k.Tests2
         [TestMethod]
         public void WinService()
         {
-            var result = true;
             var serviceName = "SBODI_Server";
 
-            
-            result = k.win32.WinService.Exists(serviceName);
+
+            bool result = win32.WinService.Exists(serviceName);
             Assert.IsTrue(result);
             result = k.win32.WinService.Exists(serviceName + "!");
             Assert.IsFalse(result);

@@ -120,4 +120,16 @@
   <data name="M00000_1" xml:space="preserve">
     <value>Fatal error: {0}</value>
   </data>
+  <data name="M00001_0" xml:space="preserve">
+    <value>Could not load credential: ID not found.</value>
+  </data>
+  <data name="M00002_0" xml:space="preserve">
+    <value>Credential expired.</value>
+  </data>
+  <data name="M00003_1" xml:space="preserve">
+    <value>The bucket is limited {0} columns.</value>
+  </data>
+  <data name="M00004_1" xml:space="preserve">
+    <value>The bucket is limited {0} rows.</value>
+  </data>
 </root>

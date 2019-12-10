@@ -48,6 +48,11 @@ namespace k
             return SHA512(input);
         }
 
+        /// <summary>
+        /// Create unique id to values
+        /// </summary>
+        /// <param name="values">Values</param>
+        /// <returns></returns>
         public static string Id(params object[] values)
         {
             var input = String.Join("", values);

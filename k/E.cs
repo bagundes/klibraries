@@ -25,7 +25,11 @@ namespace k
         public enum Message
         {
             TestMessage = -1,
-            GenerelError_1 = 0
+            GenerelError_1 = 0,
+            CredentialId_0 = 1,
+            CredentialExpired_0 = 2,
+            BucketSizeLimite_1 = 3,
+            BucketCapacityLimite_1 = 4
         }
     }
 }
