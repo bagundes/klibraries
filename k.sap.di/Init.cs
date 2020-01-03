@@ -8,13 +8,9 @@ namespace k.sap.di
 {
     public class Init : IInit
     {
-        private string control = DateTime.Now.ToString("ffffff");
-
-        public void Init10_Dependency()
+        public void Init10_Dependencies()
         {
-            k.StartInit.Starting(new k.Init());
-            k.StartInit.Starting(new k.db.Init());
-            k.StartInit.Starting(new k.sap.Init());
+            k.StartInit.Register(new k.sap.Init());
         }
 
 

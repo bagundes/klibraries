@@ -6,7 +6,7 @@ namespace k.sap.diserver
     public class Init : IInit
     {
         private string LOG => this.GetType().Name;
-        public void Init10_Dependency()
+        public void Init10_Dependencies()
         {
             k.StartInit.Starting(new k.Init());
             k.StartInit.Starting(new k.sap.Init());

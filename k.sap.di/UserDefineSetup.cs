@@ -1,4 +1,5 @@
 ﻿using k.Lists;
+using k.sap.Attributes;
 using k.sap.Models;
 using SAPbobsCOM;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 
 namespace k.sap.di
 {
@@ -17,61 +19,104 @@ namespace k.sap.di
             Matrix,
             None
         }
-        private string LOG => this.GetType().Name; 
+        private string LOG => this.GetType().FullName; 
 
         public List<TableStruct> Tables = new List<TableStruct>();
 
-        public void Add<T>(T dt, Form form) where T : k.sap.Models.DataTable
+        /// <summary>
+        /// Convert model to TableStruct and add in the list to create.
+        /// </summary>
+        /// <typeparam name="T">DataTable</typeparam>
+        /// <param name="model">Model</param>
+        /// <param name="form">Create type of form</param>
+        public void Add<T>(T model, Form form) where T : k.sap.Models.DataTable
         {
-            var table = new TableStruct(
-                dt.Properties.Name,
-                dt.Properties.Description,
-                dt.Properties.TableName,
-                (SAPbobsCOM.BoUTBTableType)dt.Properties.ObjectType,
-                dt.Properties.Level,
-                dt.Properties.IsSystem,
-                form);
+            TableStruct table;
 
-           
-           
-            foreach (var field in dt.GetType().GetFields())
+            #region Table struct
+            BoUTBTableType boUTBTableType;
+            if (model.Properties.TableType == G.DataBase.SAPTables.TableType.System)
+                boUTBTableType = (BoUTBTableType)G.DataBase.SAPTables.TableType.bott_NoObject;
+            else
+                boUTBTableType = (BoUTBTableType)model.Properties.TableType;
+
+            table = new TableStruct(
+                model.Properties.Name,
+                model.Properties.Description,
+                model.Properties.TableName,
+                boUTBTableType,
+                model.Properties.Level,
+                model.Properties.IsSystem,
+                form);
+            #endregion
+
+            #region Column struct
+            foreach (var field in model.GetType().GetFields())
             {
-                foreach(object attr in field.GetCustomAttributes(true))
+                var col = new ColumnStruct();
+
+                foreach (object attr in field.GetCustomAttributes(true))
                 {
                     if (attr != null && attr is SAPColumnAttribute)
                     {
                         var sapcol = attr as SAPColumnAttribute;
-                        var col = new ColumnStruct
+                        if (!sapcol.SapColumn)
                         {
-                            Name = field.Name.StartsWith("U_") ? field.Name.Replace("U_", "") : field.Name,
-                            Description = sapcol.Description
-                        };
+                            var customer_tag =  k.G.DataBase.Tags.Namespace;
+                            var def_userfield = k.G.DataBase.Tags.DefPrefixUserField;
 
-                        col.SetFieldType(sapcol.Type);
+                            // Removing SAP and Customer tag in the column name
+                            col.Name = field.Name.StartsWith(def_userfield) ? field.Name.Replace(def_userfield, null) : field.Name;
 
-                        table.Columns.Add(col);
+                            if(model.Properties.IsSystem)
+                                col.Name = col.Name.StartsWith(customer_tag) ? col.Name : k.db.Factory.Scripts.Namespace($"!!{col.Name}");
+                            
+                            col.Description = k.db.Factory.Scripts.Namespace($"!!: {sapcol.Description}");
+                            col.Size = sapcol.Size;
+                            col.SetFieldType(sapcol.Type);
+
+                            #region Valid Values
+                            if (attr != null && attr is SAPColumnValidValuesAttribute)
+                            {
+                                var sapVValues = attr as SAPColumnValidValuesAttribute;
+                                col.ValidValues = sapVValues.GetValidValues();
+                            }
+                            #endregion
+                        }
                     }
+
+                    
                 }
+
+                if (!String.IsNullOrEmpty(col.Name))
+                    table.Columns.Add(col);
             }
 
             Tables.Add(table);
+            #endregion
         }
 
         
 
-        private void CreateTable(TableStruct table)
+        private bool CreateTable(TableStruct table, bool test)
         {
             if (table.IsSystem)
-                return;
+                return false;
+
             // Add or update only if necessary
-            var tableNameWithoutAt = table.Table.Replace("@", "");
+            var tableNameWithoutAt = k.db.Factory.Scripts.Namespace(table.Table.Replace("@", ""));
 
             var foo = k.db.Factory.ResultSet.GetRow(R.CredID, Content.Queries.OUTB.Details_1, tableNameWithoutAt);
-            if(foo.HasValues)
+            if(foo != null)
             {
                 if (foo["Descr"].ToString() == table.Description)
+                {
                     if (foo["ObjectType"].ToIntOrNull() == (int)table.TableType)
-                        return;
+                        return false;
+                    else if (test)
+                        return true;
+                }
+
             }
 
             if (!P.CreateTableAndFields)
@@ -89,72 +134,67 @@ namespace k.sap.di
             #endregion
 
 
-            var oUserTableMD = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserTables) as SAPbobsCOM.UserTablesMD;
+            var oMD = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserTables) as SAPbobsCOM.UserTablesMD;
 
             try
             {
-                var update = oUserTableMD.GetByKey(tableNameWithoutAt);
+                var update = oMD.GetByKey(tableNameWithoutAt);
 
                 if (!update)
                 {
-                    oUserTableMD.TableName = tableNameWithoutAt;
-                    oUserTableMD.TableType = table.TableType;
+                    oMD.TableName = tableNameWithoutAt;
+                    oMD.TableType = table.TableType;
                 }
-                oUserTableMD.TableDescription = table.Description;
+                oMD.TableDescription = table.Description;
 
                 int res;
                 if (update)
-                    res = oUserTableMD.Update();
+                    res = oMD.Update();
                 else
-                    res = oUserTableMD.Add();
+                    res = oMD.Add();
 
+
+                var track = k.Diagnostic.TrackMessages("Model:", table.ToJson(), oMD.GetType().Name, oMD.GetAsXML());
+                
                 if (res != 0)
                 {
                     var error = k.sap.DI.GetLastErrorDescription();
-                    var track = k.Diagnostic.Track(table.ToJson());
-                    k.Diagnostic.Error(LOG, R.Project, track, $"({res}) {error}.");
+                    k.Diagnostic.Error(LOG, track, $"({res}) {error}.");
                     throw new Exception($"Error to create {tableNameWithoutAt} table. Error code {res}", new Exception(error));
                 }
                 else
                 {
                     var bar = update ? "updated" : "created";
-                    var track = k.Diagnostic.Track(oUserTableMD.GetAsXML());
-                    k.Diagnostic.Debug(this.GetHashCode(), track, R.Project, $"{tableNameWithoutAt} table has been {bar} as {table.TableType.ToString()}");
+                    k.Diagnostic.Debug(this, track, $"{tableNameWithoutAt} table has been {bar} as {table.TableType.ToString()}");
+
+                    return true;
                 }
 
             }
             catch (Exception ex)
             {
-                k.Diagnostic.Error(LOG, R.Project, ex);
+                k.Diagnostic.Error(LOG, ex);
                 throw ex;
             }
             finally
             {
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(oUserTableMD);
-                oUserTableMD = null;
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(oMD);
+                oMD = null;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
-        }
+        }            
 
-        private void CreateColumn(string tableName, ColumnStruct col)
+
+        private bool CreateColumn(string tableName, ColumnStruct col, bool test)
         {
-            #region Error -1120 : Error: Ref count for this object is higher then 0
-            // Solution : https://archive.sap.com/discussions/thread/1958196
-            var oRS = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset) as SAPbobsCOM.Recordset;
 
-            System.Runtime.InteropServices.Marshal.ReleaseComObject(oRS);
-            oRS = null;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            #endregion
+            var customer_tag = k.G.DataBase.Tags.Namespace;
 
             var colName = col.Name;
 
-            if (colName.Substring(0, 2) == "U_")
+            if (colName.StartsWith("U_"))
                 colName = colName.Substring(2);
-
-
 
             var fieldInfo = k.db.Factory.ResultSet.GetRow(R.CredID, Content.Queries.CUFD.FieldIDInfor_2
                 , tableName
@@ -190,33 +230,52 @@ namespace k.sap.di
 
 
                 if (equals)
-                    return;
+                    return false;
+                else if (test)
+                    return !equals;
             }
             #endregion
 
-            var oUserFieldsMD = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserFields) as SAPbobsCOM.UserFieldsMD;
+            var oMD = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserFields) as SAPbobsCOM.UserFieldsMD;
 
             try
             {
+                #region Error -1120 : Error: Ref count for this object is higher then 0
+                // Solution : https://archive.sap.com/discussions/thread/1958196
+                var oRS = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.BoRecordset) as SAPbobsCOM.Recordset;
+
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(oRS);
+                oRS = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                #endregion
+
                 var update = false;
                 var res = 0;
 
                 if (fieldInfo != null)
-                    update = oUserFieldsMD.GetByKey(tableName, fieldInfo["FieldID"].ToInt());
+                    update = oMD.GetByKey(tableName, fieldInfo["FieldID"].ToInt());
 
-                
+                oMD.TableName = tableName;
+                oMD.Name = colName;
+                oMD.Description = col.Description;
 
-                oUserFieldsMD.TableName = tableName;
-                oUserFieldsMD.Name = colName;
-                oUserFieldsMD.Description = col.Description;
+                oMD.Type = col.Type;
+                oMD.SubType = col.SubType;
 
-                oUserFieldsMD.Type = col.Type;
-                oUserFieldsMD.SubType = col.SubType;
-                oUserFieldsMD.EditSize = col.Size;
-                oUserFieldsMD.Mandatory = col.Mandatory;
+                if (update && oMD.EditSize > col.Size)
+                    Diagnostic.Warning(this, null, $"It's not possible reduce size on {tableName}.{colName} column.");
+                else
+                    oMD.EditSize = col.Size;
+
+
+
+
+                oMD.EditSize = oMD.EditSize < col.Size ? col.Size : oMD.EditSize;
+                oMD.Mandatory = col.Mandatory;
 
                 if (!String.IsNullOrEmpty(col.DefaultValue))
-                    oUserFieldsMD.DefaultValue = col.DefaultValue;
+                    oMD.DefaultValue = col.DefaultValue;
 
                 //if (column.likedTable != null)
                 //    oUserFieldsMD.LinkedTable = column.likedTable.TableName;
@@ -226,45 +285,54 @@ namespace k.sap.di
                 if (col.ValidValues.HasValues)
                 {
                     // Creating index of valid values.
-                    var indexValidValues = new Dictionary<int, string>(oUserFieldsMD.ValidValues.Count);
-                    for (int i = 0; i < oUserFieldsMD.ValidValues.Count; i++)
+                    var indexValidValues = new Dictionary<int, string>(oMD.ValidValues.Count);
+                    for (int i = 0; i < oMD.ValidValues.Count; i++)
                     {
-                        oUserFieldsMD.ValidValues.SetCurrentLine(i);
-                        indexValidValues.Add(i/*current line */, oUserFieldsMD.ValidValues.Value);
+                        oMD.ValidValues.SetCurrentLine(i);
+                        if(!String.IsNullOrEmpty(oMD.ValidValues.Value))
+                            indexValidValues.Add(i/*current line */, oMD.ValidValues.Value);
                     }
 
 
                     // Add or update the valid values
                     foreach (var value in col.ValidValues[0])
                     {
-                        var indexValidValue = indexValidValues.Where(t => t.Value.Equals(value.Value.ToString())).Select(t => t.Key).FirstOrDefault();
+                        var indexValidValue = -1;
+
+                        if (indexValidValues.Where(t => t.Value.Equals(value.Value.ToString())).Select(t => t.Key).Any())
+                            indexValidValue = indexValidValues.Where(t => t.Value.Equals(value.Value.ToString())).Select(t => t.Key).FirstOrDefault();
+                                
+
                         if (indexValidValue > -1)
                         {
-                            oUserFieldsMD.ValidValues.SetCurrentLine(indexValidValue);
+                            oMD.ValidValues.SetCurrentLine(indexValidValue);
                         }
-                        else if (!String.IsNullOrEmpty(oUserFieldsMD.ValidValues.Value))
+                        else if (!String.IsNullOrEmpty(oMD.ValidValues.Value))
                         {
-                            oUserFieldsMD.ValidValues.Add();
-                            oUserFieldsMD.ValidValues.SetCurrentLine(oUserFieldsMD.ValidValues.Count - 1);
+                            oMD.ValidValues.Add();
+                            oMD.ValidValues.SetCurrentLine(oMD.ValidValues.Count - 1);
                         }
 
-                        oUserFieldsMD.ValidValues.Value = value.Key;
-                        oUserFieldsMD.ValidValues.Description = value.Value;
+                        oMD.ValidValues.Value = value.Key;
+                        oMD.ValidValues.Description = value.Value;
                     }
+                } else
+                {
+                    if(oMD.ValidValues.Count > 0)
+                        oMD.ValidValues.Delete();
                 }
 
                 #endregion
 
                 if (update)
-                    res = oUserFieldsMD.Update();
+                    res = oMD.Update();
                 else
-                    res = oUserFieldsMD.Add();
+                    res = oMD.Add();
 
-
+                var track = k.Diagnostic.TrackMessages("Model:", col.ToJson(), oMD.GetType().Name, oMD.GetAsXML());
                 if (res != 0)
                 {
                     var error = k.sap.DI.GetLastErrorDescription();
-                    var track = k.Diagnostic.Track(col.ToJson());
 
                     switch (res)
                     {
@@ -272,27 +340,31 @@ namespace k.sap.di
                         case -2035: // Ignored beacause the column already exist.
                         case -1029:
                         case -5002: // 10000558 - Field length cannot be decreased.
-                            k.Diagnostic.Warning(this.GetHashCode(), track, R.Project, $"({res}) {error}");
-                            return;
+                            k.Diagnostic.Warning(this.GetHashCode(), track, $"({res}) {error}");
+                            return false;
                         default:
-                            k.Diagnostic.Error(LOG, R.Project, track, $"({res}) {error}.");
+                            k.Diagnostic.Error(LOG, track, $"({res}) {error}.");
                             throw new Exception($"Error to create {tableName}.{col.Name} column. Error code {res}", new Exception(error));
                     }  
                 }
                 else
                 {
-                    k.Diagnostic.Debug(this.GetHashCode(), R.Project, $"{tableName}.{col.Name} column has been successfully created");
-                }                
+                    k.Diagnostic.Debug(this, track, $"{tableName}.{col.Name} column has been successfully created");
+                    return true;
+                }
+
+                return true;
             }
             catch (Exception ex)
             {
-                k.Diagnostic.Error(LOG, R.Project, ex);
+                k.Diagnostic.Error(LOG, ex);
+                k.Diagnostic.Error(this, null, $"Error to create the {tableName}.{colName} field");
                 throw ex;
             }
             finally
             {
-                System.Runtime.InteropServices.Marshal.ReleaseComObject(oUserFieldsMD);
-                oUserFieldsMD = null;
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(oMD);
+                oMD = null;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
@@ -300,6 +372,7 @@ namespace k.sap.di
 
         private void CreateUDOs()
         {
+            // TODO: Create ruler to check if it need to add or update the UDO
             var dsources = Tables.Where(t => t.IsSystem == false
                                     && (t.TableType == BoUTBTableType.bott_Document
                                         || t.TableType == BoUTBTableType.bott_MasterData)
@@ -309,52 +382,52 @@ namespace k.sap.di
             {
 
                 int res = 0;
-                var oUserObjectsMD = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserObjectsMD) as SAPbobsCOM.UserObjectsMD;
+                var oMD = k.sap.DI.Conn.GetBusinessObject(SAPbobsCOM.BoObjectTypes.oUserObjectsMD) as SAPbobsCOM.UserObjectsMD;
 
                 try
                 {
-                    var update = oUserObjectsMD.GetByKey(dsource.Name);
+                    var update = oMD.GetByKey(dsource.Name);
 
-                    oUserObjectsMD.Code = dsource.Name;
-                    oUserObjectsMD.Name = dsource.Name;
-                    oUserObjectsMD.ObjectType = (BoUDOObjType)dsource.TableType;
-                    oUserObjectsMD.TableName = dsource.Table;
-                    oUserObjectsMD.CanArchive = BoYesNoEnum.tNO;
-                    oUserObjectsMD.CanCancel = BoYesNoEnum.tNO;
-                    oUserObjectsMD.CanClose = BoYesNoEnum.tNO;
+                    oMD.Code = dsource.Name;
+                    oMD.Name = dsource.Name;
+                    oMD.ObjectType = (BoUDOObjType)dsource.TableType;
+                    oMD.TableName = dsource.Table;
+                    oMD.CanArchive = BoYesNoEnum.tNO;
+                    oMD.CanCancel = BoYesNoEnum.tNO;
+                    oMD.CanClose = BoYesNoEnum.tNO;
 
                     if (dsource.Form != Form.None)
                     {
-                        oUserObjectsMD.CanCreateDefaultForm = BoYesNoEnum.tYES;
+                        oMD.CanCreateDefaultForm = BoYesNoEnum.tYES;
                         if (dsource.Form == Form.Matrix)
-                            oUserObjectsMD.EnableEnhancedForm = BoYesNoEnum.tNO; // Create a type of matrix form
+                            oMD.EnableEnhancedForm = BoYesNoEnum.tNO; // Create a type of matrix form
                     }
 
-                    oUserObjectsMD.CanDelete = BoYesNoEnum.tYES;
-                    oUserObjectsMD.CanFind = BoYesNoEnum.tNO;
-                    oUserObjectsMD.CanLog = BoYesNoEnum.tYES;
-                    oUserObjectsMD.CanYearTransfer = BoYesNoEnum.tNO;
-                    oUserObjectsMD.ManageSeries = BoYesNoEnum.tNO;
+                    oMD.CanDelete = BoYesNoEnum.tYES;
+                    oMD.CanFind = BoYesNoEnum.tNO;
+                    oMD.CanLog = BoYesNoEnum.tYES;
+                    oMD.CanYearTransfer = BoYesNoEnum.tNO;
+                    oMD.ManageSeries = BoYesNoEnum.tNO;
 
 
                     var tables = Tables.Where(t => t.Name == dsource.Name && t.Level > 0).OrderBy(t => t.Level).ToList();
 
                     foreach (var table in Tables)
                     {
-                        var line = oUserObjectsMD.ChildTables.Count - 1;
-                        oUserObjectsMD.ChildTables.SetCurrentLine(line);
-                        oUserObjectsMD.ChildTables.TableName = table.Table;
+                        var line = oMD.ChildTables.Count - 1;
+                        oMD.ChildTables.SetCurrentLine(line);
+                        oMD.ChildTables.TableName = table.Table;
                     }
 
                     if (update)
-                        res = oUserObjectsMD.Update();
+                        res = oMD.Update();
                     else
-                        res = oUserObjectsMD.Add();
+                        res = oMD.Add();
 
+                    var track = k.Diagnostic.TrackMessages("Model:", dsource.ToJson(), oMD.GetType().Name, oMD.GetAsXML());
                     if (res != 0)
                     {
                         var error = k.sap.DI.GetLastErrorDescription();
-                        var track = k.Diagnostic.TrackObj(oUserObjectsMD);
 
                         switch (res)
                         {
@@ -362,27 +435,27 @@ namespace k.sap.di
                             case -2035:
                             case -1029: //Not possible update the UDO.
                             case -5002:
-                                k.Diagnostic.Warning(this.GetHashCode(), track, R.Project, $"({res}) {error}");
+                                k.Diagnostic.Warning(this.GetHashCode(), track, $"({res}) {error}");
                                 return;
                             default:
-                                k.Diagnostic.Error(LOG, R.Project, track, $"({res}) {error}.");
+                                k.Diagnostic.Error(LOG, track, $"({res}) {error}.");
                                 throw new Exception($"Error to create {dsource.Name} UDO. Error code {res}", new Exception(error));
                         }
                     }
                     else
                     {
-                        k.Diagnostic.Debug(this.GetHashCode(), R.Project, $"{dsource.Name} UDO has been successfully created");
+                        k.Diagnostic.Debug(this.GetHashCode(), null, $"{dsource.Name} UDO has been successfully created");
                     }
                 }
                 catch (Exception ex)
                 {
-                    k.Diagnostic.Error(LOG, R.Project, ex);
+                    k.Diagnostic.Error(LOG, ex);
                     throw ex;
                 }
                 finally
                 {
-                    System.Runtime.InteropServices.Marshal.ReleaseComObject(oUserObjectsMD);
-                    oUserObjectsMD = null;
+                    System.Runtime.InteropServices.Marshal.ReleaseComObject(oMD);
+                    oMD = null;
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
                 }
@@ -390,20 +463,32 @@ namespace k.sap.di
 
         }
 
-        public void Save()
+        /// <summary>
+        /// Create or update the user data tables
+        /// </summary>
+        /// <param name="test">Execute the test mode</param>
+        /// <returns></returns>
+        public bool Save(bool test)
         {
+            // It return true if any method return true
+            var res = false;
+            
             foreach(var table in Tables)
             {
-                CreateTable(table);
+                res = CreateTable(table, test) || res;
                 foreach (var col in table.Columns)
-                    CreateColumn($"{table.Table}", col);
+                    res = CreateColumn($"{table.Table}", col, test) || res;
             }
 
             CreateUDOs();
+
+            return res;
         }
     }
 
-
+    /// <summary>
+    /// Table structure k library format
+    /// </summary>
     public class TableStruct : k.KModel
     {
         public readonly string Name;
@@ -415,17 +500,28 @@ namespace k.sap.di
         public readonly UserDefineSetup.Form Form;
         public List<ColumnStruct> Columns = new List<ColumnStruct>();
 
+        /// <summary>
+        /// Table struct
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <param name="table"></param>
+        /// <param name="tableType"></param>
+        /// <param name="level"></param>
+        /// <param name="isSystem"></param>
+        /// <param name="form"></param>
         public TableStruct(string name, string description, string table, BoUTBTableType tableType, int level, bool isSystem, UserDefineSetup.Form form = UserDefineSetup.Form.None)
         {
             Name = name;
             Description = $"{R.Namespace}: {description}";
-            Table = table;
+            Table = k.db.Factory.Scripts.Namespace(table);
             TableType = tableType;
             IsSystem = isSystem;
             Level = level;
             Form = form;
         }
     }
+
     public class ColumnStruct : k.KModel
     {
         public string Name;
@@ -438,13 +534,13 @@ namespace k.sap.di
         public SAPbobsCOM.BoYesNoEnum Mandatory;
         public string DefaultValue;
 
-        public MyList ValidValues = new MyList();
+        public Bucket ValidValues = new Bucket();
         
-        public void SetFieldType(sap.E.SAPTables.ColumnsType col)
+        public void SetFieldType(G.DataBase.SAPTables.ColumnsType col)
         {
             int boFieldTypes;
             int boFldSubTypes;
-            MyTypeID = sap.E.SAPTables.GetTypeID(col, out boFieldTypes, out boFldSubTypes);
+            MyTypeID = G.DataBase.SAPTables.GetTypeID(col, out boFieldTypes, out boFldSubTypes);
 
             Type = (BoFieldTypes)boFieldTypes;
             SubType = (BoFldSubTypes)boFldSubTypes;
@@ -455,21 +551,21 @@ namespace k.sap.di
         }
 
 
-        private void TypeOfColumn(sap.E.SAPTables.ColumnsType sapCol)
+        private void TypeOfColumn(G.DataBase.SAPTables.ColumnsType sapCol)
         {
             switch (sapCol)
             {
-                case sap.E.SAPTables.ColumnsType.Special_MD5:
+                case G.DataBase.SAPTables.ColumnsType.Special_MD5:
                     this.Type = BoFieldTypes.db_Alpha;
                     this.SubType = BoFldSubTypes.st_None;
                     this.Size = 32; break;
-                case sap.E.SAPTables.ColumnsType.Special_YesOrNo:
+                case G.DataBase.SAPTables.ColumnsType.Special_YesOrNo:
                     this.Type = BoFieldTypes.db_Alpha;
                     this.SubType = BoFldSubTypes.st_None;
                     this.Size = 1;
                     this.ValidValues.Add("Y", "Yes");
                     this.ValidValues.Add("N", "No"); break;
-                case sap.E.SAPTables.ColumnsType.Special_StatusQueue:
+                case G.DataBase.SAPTables.ColumnsType.Special_StatusQueue:
                     this.Type = BoFieldTypes.db_Alpha;
                     this.SubType = BoFldSubTypes.st_None;
                     this.Size = 1;

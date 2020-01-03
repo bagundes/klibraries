@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace k
 {
     public static class Security
     {
+        private static int uniqueNum = -99999999;
         private static string masterKey => k.R.Security.MasterKey;
         private static string keyValidate => "@";
 
@@ -52,9 +54,10 @@ namespace k
         /// Create unique id to values
         /// </summary>
         /// <param name="values">Values</param>
-        /// <returns></returns>
+        /// <returns>Id is represented per hexa</returns>
         public static string Id(params object[] values)
         {
+            if (values is null) return (Structs.Track.Null); // null
             var input = String.Join("", values);
             input = input.Replace(Environment.NewLine, "").Replace(@"\n", "").Replace(@"\t", "");
 
@@ -65,18 +68,37 @@ namespace k
             return String.Format("{0:X}", id);
         }
 
+        public static int IdNumber()
+        {
+            var res = 0;
+            var date = DateTime.Now.ToString("yyyyMMddHHmmss");
+            foreach (var v in date)
+                res += int.Parse(v.ToString());
+
+            return res;
+        }
+
+
+
         public static string RandomChars(int size, bool special = false)
         {
             var chars = System.String.Empty;
-
+            var hash = Dynamic.RemoveDuplicateChars(MD5(uniqueNum++ + DateTime.Now.ToString()));
             if (special)
                 chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!£$%^&*(){}-_+=[]:;@~#";
             else
                 chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+            foreach (var c in hash)
+            {
+                    var l = c.ToString();
+                    chars = chars.Replace(l.ToLower(), null).Replace(l, l.ToLower());
+            }
+
+
             var random = new Random();
             var result = new string(
-                Enumerable.Repeat(chars, size)
+                Enumerable.Repeat(chars + hash, size)
                           .Select(s => s[random.Next(s.Length)])
                           .ToArray());
             return result;

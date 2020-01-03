@@ -54,11 +54,11 @@ namespace k.sap
         //    {
         //        var error = di1.GetLastErrorDescription();
         //        var track = k.Diagnostic.Track(sapCredential.DataInfo());
-        //        k.Diagnostic.Error(LOG, R.Project, track, $"({res}) {error}.");
+        //        k.Diagnostic.Error(LOG, track, R.Project, $"({res}) {error}.");
         //        throw new k.sap.di.KDIException(LOG, k.sap.di.E.Message.ErrorConnectDI_2, di1.Server, error);
         //    }
         //    else
-        //        k.Diagnostic.Debug(LOG, R.Project, "SAP DI connected on {0} customer as {1}", di1.CompanyName, di1.UserName);
+        //        k.Diagnostic.Debug(LOG, null, R.Project, "SAP DI connected on {0} customer as {1}", di1.CompanyName, di1.UserName);
         //}
 
     }

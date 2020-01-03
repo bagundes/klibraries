@@ -10,28 +10,27 @@ namespace k.Models
 {
     public abstract class Credential : k.KModel
     {
-        protected string LOG => this.GetType().Name;
-        public readonly string path;
-
+        protected string LOG => this.GetType().FullName;
 
         public string Host { get; set; }
         public string Schema { get; set; }
         public string User { get; set; }
-        public string Password { get; set; }
+
+        /// <summary>
+        /// Encrypted password
+        /// </summary>
+        public string EPassword { get; set; }
         public DateTime DueDate { get; set; }
-        public k.Lists.MyList Parameters { get; set; } = new k.Lists.MyList();
+        public k.Lists.Bucket Parameters { get; set; } = new k.Lists.Bucket();
         public  List<string> Roles { get; set; } = new List<string>();
-        public Credential(G.Projects project) 
-        {
-            path = Shell.Directory.AppDataFolder(project, LOG.ToLower());
-        }
+        public Credential() {}
 
         protected void Load(string id)
         {
-            var file = Shell.File.Find(path, $"{id}.{LOG.ToLower()}").FirstOrDefault();
+            var file = Shell.File.Find(Helpers.CredentialHelper.Path, $"{id}.{LOG.ToLower()}").FirstOrDefault();
             if (file == null)
             {
-                k.Diagnostic.Error(LOG, R.Project, "Cannot possible to load {0} id in {1}", id, path);
+                k.Diagnostic.Error(LOG, null, "Cannot possible to load {0} id in {1}", id, Helpers.CredentialHelper.Path);
                 throw new KException(LOG, E.Message.CredentialId_0);
             }
             
@@ -63,7 +62,7 @@ namespace k.Models
             var id = Security.Hash(json);
             var name = $"{id}.{LOG.ToLower()}";
             
-            Shell.File.Write(json, name, path);
+            Shell.File.Write(json, name, Helpers.CredentialHelper.Path);
 
             return id;
         }
@@ -71,8 +70,13 @@ namespace k.Models
         #region Parameters
         public virtual void SetParameter(string key, object value)
         {
+            if (key.ToLower().Contains("passw"))
+                value = Helpers.CredentialHelper.ConvertToEPassword(value.ToString(), User);
+
             Parameters.Set(key, value);
         }
+
+
 
         public virtual Dynamic GetParameter(string key, string msgerror = null)
         {
@@ -80,7 +84,10 @@ namespace k.Models
             if (!Parameters.Get(key, out val) && !String.IsNullOrEmpty(msgerror))
                 throw new KeyNotFoundException(msgerror);
             else
-                return val;
+                if (key.Contains("passw"))
+                    return Helpers.CredentialHelper.ConvertToPassword(val.ToString(), User);
+                else
+                    return val;
 
         }
         #endregion
@@ -101,28 +108,49 @@ namespace k.Models
         /// <summary>
         /// Set the encrypted password in the password field.
         /// </summary>
-        /// <param name="epasswd"></param>
-        public void SetEncryptPassword(string epasswd)
+        /// <param name="passowrd"></param>
+        public void SetPassword(string passowrd)
         {
-            Password = k.Security.Decrypt(epasswd, User);
+            EPassword = Helpers.CredentialHelper.ConvertToEPassword(passowrd, User);
         }
 
-        public string GetEncryptPassword()
+        public string GetPassword()
         {
-            return k.Security.Encrypt(Password, User);
+            try
+            {
+                return k.Security.Decrypt(EPassword, User);
+            }catch(Exception ex)
+            {
+                var track = Diagnostic.TrackObject(this);
+                Diagnostic.Debug(this, track, $"The invalid epassword, may be you added password before add user");
+                Diagnostic.Error(LOG, ex);
+                throw new KException(LOG, E.Message.CredPasswordError_0);
+                throw ex;
+            }
+        }
+
+        public bool IsValidPassword(string password)
+        {
+            try
+            {
+                return GetPassword() == password;
+            }catch
+            {
+                return false;
+            }
         }
 
         /// <summary>
         /// Details about the data information
         /// </summary>
-        /// <returns></returns>
-        public string DetailsFull()
+        /// <returns>Complete information about this credential</returns>
+        public string Info1()
         {
             var cred = (Credential)Clone();
             if (!R.DebugMode)
             {
-                var passwd = String.IsNullOrEmpty(cred.Password) ? "null" : cred.Password.Substring(0, 2) + new string('*', cred.Password.Length - 2);
-                cred.Password = passwd;
+                var passwd = String.IsNullOrEmpty(cred.EPassword) ? "null" : cred.EPassword.Substring(0, 2) + new string('*', cred.EPassword.Length - 2);
+                cred.EPassword = passwd;
 
                 foreach(var key in cred.Parameters.Keys)
                 {
@@ -146,37 +174,12 @@ namespace k.Models
         }
 
         /// <summary>
-        /// Return information about the credential
+        /// Details about the data information
         /// </summary>
-        /// <returns></returns>
-        public string DetailsSimple()
+        /// <returns>Basic information about this credential</returns>
+        public string Info2()
         {
             return $"{User}@{Host}.{Schema}";
-        }
-    }
-
-    internal static class CredentialControl
-    {
-        internal static void ClearSchedule()
-        {
-            var wait = R.DebugMode ? TimeSpan.FromDays(1) : TimeSpan.FromHours(1);
-
-            do
-            {
-                ClearCredentials();
-
-                Thread.Sleep((int)wait.TotalMilliseconds);
-            } while (true);
-        }
-
-        public static void ClearCredentials()
-        {
-
-            var path = Shell.Directory.GetSpecialFolder(Shell.Directory.SpecialFolder.AppData);
-
-            var files = Shell.File.Find(path.FullName, "*.credential", System.IO.SearchOption.AllDirectories, DateTime.Now.AddDays(-30));
-            
-            Shell.File.Delete(files);           
         }
     }
 }

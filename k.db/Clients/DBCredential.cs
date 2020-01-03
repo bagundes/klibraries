@@ -9,7 +9,7 @@ namespace k.db.Clients
         public virtual string DbServer => Host;
         public virtual string DbDatabase => Schema;
 
-        public DBCredential(G.Projects project) : base(project)
+        public DBCredential() : base()
         {
         }        
 

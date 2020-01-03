@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace k.db.Factory
+namespace k.Interfaces
 {
     public interface IFactory : IDisposable
     {
@@ -13,7 +13,7 @@ namespace k.db.Factory
         int FieldCount { get; }
         string LastCommand { get; }
         string Id { get; }
-        E.DataBase.TypeOfClient ClientType { get; }
+        G.DataBase.TypeOfClient ClientType { get; }
 
         int Position { get; }
         #endregion
@@ -32,7 +32,7 @@ namespace k.db.Factory
 
         #region Result
         Dynamic Field(object index);
-        MyList Fields();
+        Bucket Fields();
 
         #endregion
 
@@ -45,5 +45,7 @@ namespace k.db.Factory
         int Version();
         //ColumnStruct[] Columns(string table);
         #endregion
+
+        void Save<T>(T model) where T : k.Interfaces.IUserDataTableNoObject;
     }
 }

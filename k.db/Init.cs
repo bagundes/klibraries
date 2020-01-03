@@ -6,11 +6,9 @@ namespace k.db
 {
     public class Init : IInit
     {
-        private string control = DateTime.Now.ToString("ffffff");
-
-        public void Init10_Dependency()
+        public void Init10_Dependencies()
         {
-            k.StartInit.Starting(new k.Init());
+            k.StartInit.Register(new k.Init());
         }
 
         public void Init20_Config()

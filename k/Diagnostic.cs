@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 using System.Threading;
+using k.Structs;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -9,7 +10,7 @@ namespace k
 {
     public static class Diagnostic
     {
-        private static string Path => Shell.Directory.TempDataFolder(R.Project, "log");
+        
 
         private enum DiagnosticType
         {
@@ -18,159 +19,77 @@ namespace k
             Error,
         }
 
-
-        internal static void ClearLogSchedule()
-        {
-            var wait = R.DebugMode ? 600000 /* 10 minutes*/ : 86400000 /* per day */;
-
-            do
-            {
-                ClearLog();
-
-                Thread.Sleep(wait); 
-            } while (true);
-        }
-
-        public static void ClearLog()
-        {
-            
-            var zippath = Shell.Directory.TempDataFolder(R.Project);
-
-            var lastAccessLog = R.DebugMode ? DateTime.Now.AddMinutes(-10) : DateTime.Now.AddDays(-1);
-            var lastAccessZip = R.DebugMode ? DateTime.Now.AddMinutes(-30) : DateTime.Now.AddDays(-P.ClearLogThanNDays);
-
-            var files_log = Shell.File.Find(Path, "*", System.IO.SearchOption.AllDirectories, lastAccessLog);
-
-            Shell.File.ZipFiles(files_log, $"{zippath}\\log_{DateTime.Now.ToString("yyyyMMdd_hhmm")}.zip");
-            Shell.File.Delete(files_log);
-
-            var files_zip = Shell.File.Find(zippath, "*.zip", System.IO.SearchOption.TopDirectoryOnly, lastAccessZip);
-
-            Shell.File.Delete(files_zip);
-        }
-
         #region Error
-        /// <summary>
-        /// Create a error message log
-        /// </summary>
-        /// <param name="instance">Class hash code or class name</param>
-        /// /// <param name="track">Track file</param>
-        /// <param name="prj">Project name</param>
-        /// <param name="message">Message</param>
-        /// <param name="values">Values to string format</param>
-        public static void Error(string log, string track, G.Projects prj, string message, params object[] values)
+        public static void Error(object instance, Track? track, string message, params object[] values)
         {
-            Register(DiagnosticType.Error, log, track, prj, message, values);
+            object log;
+            Details(instance, track, out track, out log);
+            Register(DiagnosticType.Error, log, track,  message, values);
         }
 
-        public static void Error(string log, G.Projects prj, Exception ex)
+        public static void Error<TEx>(object instance, TEx ex) where TEx : Exception
         {
-            var track = Track(ex);
-            Register(DiagnosticType.Error, log, track, prj, ex.Message);
-
+            Track? track = TrackException(ex);
+            object log;
+            Details(instance, track, out track, out log);
+            Register(DiagnosticType.Error, log, track, $"{ex.GetType().Name}: {ex.Message.Replace(System.Environment.NewLine, " ")}");
         }
 
-        /// <summary>
-        /// Create a error message log
-        /// </summary>
-        /// <param name="instance">Class hash code or class name</param>
-        /// <param name="prj">Project name</param>
-        /// <param name="message">Message</param>
-        /// <param name="values">Values to string format</param>
-        public static void Error(object instance, G.Projects prj, string message, params object[] values)
-        {
-            Register(DiagnosticType.Error, instance, null, prj, message, values);
-        }
         #endregion
 
         #region Warning
-
-        /// <summary>
-        /// Create a warning message log
-        /// </summary>
-        /// <param name="instance">Class hash code or class name</param>
-        /// <param name="track">Track id</param>
-        /// <param name="prj">Project name</param>
-
-        /// <param name="message">Message</param>
-        /// <param name="values">Values to string format</param>
-        public static void Warning(object instance, string track, G.Projects prj, string message, params object[] values)
+        public static void Warning(object instance, Track? track, string message, params object[] values)
         {
-            Register(DiagnosticType.Warning, instance, track, prj, message, values); 
+            object log;
+            Details(instance, track, out track, out log);
+            Register(DiagnosticType.Warning, log, null, message, values);
         }
 
-        public static void Warning(object instance, G.Projects prj, string message, params object[] values)
+        public static void Warning<TEx>(object instance, TEx ex) where TEx : Exception
         {
-            Register(DiagnosticType.Warning, instance, null, prj, message, values);
+            Track? track = TrackException(ex);
+            object log;
+            Details(instance, track, out track, out log);
+            Register(DiagnosticType.Warning, log, track, $"{ex.GetType().Name}: {ex.Message}");
         }
         #endregion
 
         #region Debug
-        public static void Debug(string log, string track, G.Projects prj, string message, params object[] values)
-        {
-            if (R.DebugMode)
-                Register(DiagnosticType.Debug, log, track, prj, message, values);
-        }
 
-        public static void Debug(string log, G.Projects prj, string message, params object[] values)
+        public static void Debug(object instance, Track? track, string message, params object[] values)
         {
             if (R.DebugMode)
-                Register(DiagnosticType.Debug, log, null, prj, message, values);
-        }
+            {
+                object log;
+                Details(instance, track, out track, out log);
 
-        public static void Debug(int hashCode, G.Projects prj, string message, params object[] values)
-        {
-            if (R.DebugMode)
-                Register(DiagnosticType.Debug, $"Instance:{hashCode.ToString("000000")}", null, prj, message, values);
-        }
-
-        public static void Debug(int hashCode, string track, G.Projects prj, string message, params object[] values)
-        {
-            if (R.DebugMode)
-                Register(DiagnosticType.Debug, $"Instance:{hashCode.ToString("000000")}", track, prj, message, values);
-        }
-
-        public static void Debug(KModel model, G.Projects prj, string message, params object[] values)
-        {
-            if (R.DebugMode)
-                Register(DiagnosticType.Debug, $"Instance:{model.GetHashCode()}", null, prj, message, values);
+                Register(DiagnosticType.Debug, log, track, message, values);
+            }
         }
         #endregion
 
         #region Track
-        public static string TrackObj(object value)
+
+        public static Track TrackMessages(params object[] values)
         {
+            if (values is null)
+                return Track.TrackNull();
 
-            var formatting = Formatting.Indented;
+            var track = new Track(Helpers.DiagnosticHelper.PathTrack);
+            
+            track.CreateId(values);
+            var text = $"Track date: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}";
+           
+            
 
-            var json = JsonConvert.SerializeObject(value,
-                new JsonSerializerSettings
-                {
-                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                    Formatting = formatting
-                });
-
-            return Track(json);
-        }
-
-
-        public static string Track(params object[] values)
-        {
-            var track = k.Security.Id(values);
-            track += new string('0', track.Length < 6 ? 6 - track.Length : 0);
-            var file = $"{Path}\\track\\{track}.track";
-
-            if(System.IO.File.Exists(file))
+            // if file exists, it will only mark as replay track.
+            if (System.IO.File.Exists(track.File))
             {
-                var text = $"Track replay date: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}";
-                Shell.File.Save(text, file, false, true);
+                Shell.File.Save(text, track.File, false, true);
             }
             else
             {
-                var list = new List<object>
-                {
-                    $"Track date: {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")}"
-                };
+                var list = new List<object>();
 
                 foreach (var value in values)
                 {
@@ -178,36 +97,91 @@ namespace k
                     {
                         int i = 0;
                         foreach (var value1 in (object[])value)
-                            list.Add($"{i++.ToString("0")}. " + value1);
+                            list.Add($"\t{i++.ToString("0")}. " + value1);
                     }
                     else
                         list.Add(value);
                 }
 
-                Shell.File.Save(Array.ConvertAll(list.ToArray(), x => x.ToString()), file, false, true);
+                list.Add(">>>>>>>>>>>>>>>>>>>>>>>>\n" + text);
+
+                Shell.File.Save(Array.ConvertAll(list.ToArray(), x => x.ToString()), track.File, false, true);
             }
 
             return track;
         }
 
-        public static string Track(Exception ex)
+        public static Track TrackObject(object value)
         {
-            var inner = ex;
+            if (value is null)
+                return Track.TrackNull();
+
+            string json;
+
+            if (value is KModel)
+                json = ((KModel)value).ToJson();
+            else
+            {
+                try
+                {
+
+                    var formatting = Formatting.Indented;
+
+                    json = JsonConvert.SerializeObject(value,
+                        new JsonSerializerSettings
+                        {
+                            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                            Formatting = formatting
+                        });
+                }catch(Exception ex)
+                {
+                    var track = TrackException(ex);
+                    json = $"Sorry! K library cannot serialize {value.GetType().FullName} object. You can check track id {track.Id}";
+                }
+            }
+            return TrackMessages("Class:" + value.GetType().FullName, json);
+        }
+
+        public static Track TrackException<TEx>(TEx ex) where TEx : Exception
+        {
+            Exception inner = ex;
             var list = new List<object>();
 
             var limit = 0;
+            //list.Add($"{ ex.GetType().Name.ToUpper()}");
+
             while (inner != null)
             {
-                if(!String.IsNullOrEmpty(ex.Message))
+                if (!String.IsNullOrEmpty(ex.Message))
                 {
                     if(limit > 0)
                         list.Add("\n>>>>> INNER EXCEPTION <<<<<");
                     else
-                        list.Add(">>>>> EXCEPTION <<<<<");
+                        list.Add($">>>>> { ex.GetType().Name.ToUpper()} <<<<<");
 
                     list.Add(ex.Message);
-                    list.Add(ex.StackTrace ?? "> No StackTrace");
-                    if (R.DebugMode) list.Add(ex.Source ?? "> No Source");
+
+                    if (ex.StackTrace != null)
+                    {
+                        list.Add("> STACKTRACE");
+                        list.Add(ex.StackTrace);
+                    }else
+                    {
+                        list.Add("> No StackTrace");
+                    }
+
+                    if (R.DebugMode)
+                    {
+                        if (ex.Source != null)
+                        {
+                            list.Add("> SOURCE");
+                            list.Add(ex.Source);
+                        }
+                        else
+                        {
+                            list.Add("> No Source");
+                        }
+                    }
                 }
                 
                 inner = inner.InnerException;
@@ -219,27 +193,56 @@ namespace k
                 }
             }
 
-            list.Add("\n");
-            return Track(list.ToArray());
+            //list.Add("\n");
+
+            return TrackMessages(list.ToArray());
         }
         #endregion
 
-        private static void Register(DiagnosticType dtype, object log, string track, G.Projects prj, string message, params object[] values)
+        #region Private methods
+        private static void Register(DiagnosticType dtype, object log, Track? track, string message, params object[] values)
         {
 #if DEBUG 
-            var file = $"{Path}\\{DateTime.Now.ToString("yyMMdd")}_0000.log";
+            var file = $"{Helpers.DiagnosticHelper.PathLog}\\{DateTime.Now.ToString("yyMMdd")}_0000.log";
 #else
-            var file = $"{path}\\{DateTime.Now.ToString("yyMMdd_HH")}00.log";
+            var file = $"{Helpers.DiagnosticHelper.PathLog}\\{DateTime.Now.ToString("yyMMdd_HH")}00.log";
 #endif
 
-            var time = DateTime.Now.ToString("hh:mm:ss");
+            var time = DateTime.Now.ToString("HH:mm:ss");
             var type = dtype.ToString() + new String(' ', 7 - dtype.ToString().Length);
-            var trck = !String.IsNullOrEmpty(track) ? $"Track:{track} " : null;
+            var trck = track;
+            if (message is null)
+                message = "Sorry! No messages logged.";
             var msg = Dynamic.StringFormat(message, values);
 
-            var line = $"{time} {type} - {trck}{prj}.{log}: {msg}";
+            var line = $"{time} {type} - {log} {trck}: {msg}";
 
             Shell.File.Save(line, file, false, true);
         }
+
+        private static void Details(object instance, Track? trackin, out Track? track, out object log)
+        {
+            if(instance is null)
+            {
+                track = trackin;
+                log = Track.Null;
+            }
+            else if (instance is int)
+            {
+                track = trackin;
+                log = $"C{(int)instance}";
+            }
+            else if (instance is string)
+            {
+                track = trackin;
+                log = (string)instance;
+            }
+            else
+            {
+                log = $"{instance.GetType().FullName}:C{instance.GetHashCode()}";
+                track = trackin ?? TrackObject(instance);
+            }
+        }
+        #endregion
     }
 }

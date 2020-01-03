@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.0.0</Version>
+    <Version>1.0.0</Version>
     <Authors>Bruno de Lima Fagundes</Authors>
     <Product>kcore</Product>
-    <AssemblyVersion>1000.0.0.0</AssemblyVersion>
+    <AssemblyVersion>1000.0.1.0</AssemblyVersion>
     <FileVersion>1000.0.0.0</FileVersion>
     <PackageId>k_bfagundes</PackageId>
     <Description>Kurumin core library</Description>

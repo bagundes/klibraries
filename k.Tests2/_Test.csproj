@@ -62,35 +62,15 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="KDBTest.cs" />
-    <Compile Include="KTest.cs" />
+    <Compile Include="_KDBTest.cs" />
+    <Compile Include="K_LibraryTest.cs" />
     <Compile Include="R.cs" />
-    <Compile Include="SapDiServerTest.cs" />
-    <Compile Include="SapDiTest.cs" />
+    <Compile Include="_SapDiServerTest.cs" />
+    <Compile Include="_SapDiTest.cs" />
     <Compile Include="Win32Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\k.db\k.db.csproj">
-      <Project>{0b2e8ab4-dac1-431c-a205-2887b3691368}</Project>
-      <Name>k.db</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\k.sap.diserver\k.sap.diserver.csproj">
-      <Project>{9a9d638c-3004-4607-8db3-0a9f039da1aa}</Project>
-      <Name>k.sap.diserver</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\k.sap.di\k.sap.di.csproj">
-      <Project>{c6e9949d-74a5-4878-ad7a-956fbd092649}</Project>
-      <Name>k.sap.di</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\k.sap\k.sap.csproj">
-      <Project>{ca7422f7-ae55-4525-ab85-2aa90cc6b557}</Project>
-      <Name>k.sap</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\k.win32\k.win32.csproj">
-      <Project>{45f1be25-ed4d-4241-b298-53f45c2f8e81}</Project>
-      <Name>k.win32</Name>
-    </ProjectReference>
     <ProjectReference Include="..\k\k.csproj">
       <Project>{7ad97f75-79dc-41a6-8411-8654ecc3249b}</Project>
       <Name>k</Name>

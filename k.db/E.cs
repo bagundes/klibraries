@@ -12,25 +12,5 @@ namespace k.db
             ClientIsNotDefined_0 = 1,
             InvalidFormat_2 = 2,
         }
-
-        public class DataBase
-        {
-            public enum TypeOfClient
-            {
-                MSQL,
-                Hana,
-            }
-
-            public class Tags
-            {
-                public static string Namespace => "!!_";
-                public static string NameSpaceHeader => "--NAMESPACE:";
-
-                public static string SpecificLine = "--#";
-                public static string SpecificLineHeader = "--SPECIFICLINE:";
-
-
-            }
-        }
     }
 }

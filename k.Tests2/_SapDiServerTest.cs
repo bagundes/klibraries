@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace k.Tests2
 {
-    public class SapDiServerTest
+    public class _SapDiServerTest
     {
     }
 }

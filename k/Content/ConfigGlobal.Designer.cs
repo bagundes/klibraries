@@ -61,7 +61,7 @@ namespace k.Content {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Teamsoft ltd.
+        ///   Looks up a localized string similar to Teamsoft.
         /// </summary>
         internal static string CompanyName {
             get {

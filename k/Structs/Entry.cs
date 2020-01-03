@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace k.Models
+namespace k.Structs
 {
     public struct Entry
     {

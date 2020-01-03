@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{E21F1D76-9160-4106-AD8F-FF32E127BFA5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>k.sap.ui</RootNamespace>
+    <AssemblyName>k.sap.ui</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DynamicExpresso.Core, Version=2.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\SAP Add-ons\Teamsoft\packages\DynamicExpresso.Core.2.3.1\lib\net461\DynamicExpresso.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Content\Language\en-GB.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>en-GB.resx</DependentUpon>
+    </Compile>
+    <Compile Include="E.cs" />
+    <Compile Include="Client.cs" />
+    <Compile Include="Forms\SelectFromListForm.cs" />
+    <Compile Include="Forms\Form.cs" />
+    <Compile Include="Forms\UserForm.cs" />
+    <Compile Include="Forms\SystemFormLoad.cs" />
+    <Compile Include="Forms\SystemHelpers\Others\CalendarSystemHelper.cs" />
+    <Compile Include="Helpers\ChooseFromListHelper.cs" />
+    <Compile Include="Helpers\ComboboxHelper.cs" />
+    <Compile Include="Helpers\EditTextHelper.cs" />
+    <Compile Include="Helpers\FormHelper.cs" />
+    <Compile Include="Helpers\MatrixHelper.cs" />
+    <Compile Include="Helpers\MessageHelper.cs" />
+    <Compile Include="Helpers\OptionsHelper.cs" />
+    <Compile Include="Init.cs" />
+    <Compile Include="KUIException.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="R.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\k.db\k.db.csproj">
+      <Project>{e56c0a65-6105-457c-846f-82a6baa5fb05}</Project>
+      <Name>k.db</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\k.sap\k.sap.csproj">
+      <Project>{608683e3-171a-4812-bc52-452ec9e838cc}</Project>
+      <Name>k.sap</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\k\k.csproj">
+      <Project>{6e0cd0a0-cae7-4fc5-82c2-f1e02a89847f}</Project>
+      <Name>k</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="SAPbouiCOM">
+      <Guid>{6048236A-956D-498D-A6F1-9C81C13AB6E8}</Guid>
+      <VersionMajor>10</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Content\Language\en-GB.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>en-GB.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Content\Queries\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Content\forms\selectfromlist.srf" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

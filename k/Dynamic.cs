@@ -1,5 +1,8 @@
-﻿using System;
+﻿using k.Attributes;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Text;
 
 namespace k
@@ -53,6 +56,16 @@ namespace k
             return v.ToDateTime();
         }
 
+        public static implicit operator Dynamic(bool v)
+        {
+            return new Dynamic(v);
+        }
+
+        public static implicit operator Dynamic(double v)
+        {
+            return new Dynamic(v);
+        }
+
 
         #endregion
 
@@ -93,6 +106,20 @@ namespace k
                 return null;
         }
 
+        public TimeSpan ToTime()
+        {
+            // TODO: change code
+            var foo = TimeSpan.ParseExact(Value.ToString(), "hmm", null);
+            return foo;
+            //var foo = ToString().Split(':');
+            //return new TimeSpan(int.Parse(foo[0]), int.Parse(foo[1]), 0);
+        }
+
+        public DateTime ToTime(DateTime date)
+        {
+            return date.Add(ToTime());
+        }
+
         public bool ToBool()
         {
             var val = Value.ToString().ToUpper();
@@ -111,7 +138,8 @@ namespace k
                     return false;
             }
         }
-        
+
+
         public DateTime ToDateTime(string format = "yyyy-MM-dd HH:mm:ss")
         {
             if (Value is DateTime) //if (Value.GetType() == typeof(DateTime))
@@ -119,6 +147,13 @@ namespace k
             else
                 return DateTime.ParseExact(Value.ToString(), format,
                                        System.Globalization.CultureInfo.InvariantCulture);
+        }
+        #endregion
+
+        #region SAP formats
+        public DateTime Sap_ToDate()
+        {
+            return ToDateTime("yyyyMMdd");
         }
         #endregion
 
@@ -141,9 +176,18 @@ namespace k
         {
             return -1937169414 + EqualityComparer<object>.Default.GetHashCode(Value);
         }
-        #endregion
 
+        public bool IsNullOrEmpty()
+        {
+            return Value == null || String.IsNullOrEmpty(Value.ToString());
+        }
+        #endregion
+    }
+
+    public partial class Dynamic
+    {
         #region Static
+        private static string LOG => typeof(Dynamic).FullName;
         public static Dynamic Empty => new Dynamic(String.Empty);
 
         public static string StringFormat(string format, params object[] values)
@@ -158,7 +202,7 @@ namespace k
                 if (format.Contains($"{{{i}}}"))
                 {
                     sf++;
-                    format = format.Replace($"{{{i}}}", values[i].ToString());
+                    format = format.Replace($"{{{i}}}", String.Format("{0}", values[i]));
                 }
             }
 
@@ -170,8 +214,8 @@ namespace k
                 for (int i = 0; i < values.Length; i++)
                     list.Add($"{String.Format("{0, 6}", i)}: {values[i]}");
 
-                var track = k.Diagnostic.Track(list.ToArray());
-                k.Diagnostic.Warning("StringFormat", track, R.Project, "The string is not contains all values of parameters");
+                var track = k.Diagnostic.TrackMessages(list.ToArray());
+                k.Diagnostic.Warning("StringFormat", track, "The string is not contains all values of parameters");
 
                 return $"!{format}";
             }
@@ -179,9 +223,91 @@ namespace k
             return format;
         }
 
-        //public static bool operator ==(Dynamic a, Dynamic b) => a.Equals(b);
+        public static string RemoveDuplicateChars(string val)
+        {
+            var list = new List<char>();
 
-        //public static bool operator !=(String a, String b) => !a.Equals(b);
+            foreach (var c in val)
+            {
+                if (!list.Contains(c))
+                    list.Add(c);
+            }
+
+            return String.Join("", list.ToArray());
+
+        }
+
+        public static string GetEnumDescription(Enum value)
+        {
+            var fi = value.GetType().GetField(value.ToString());
+
+            var attributes = fi.GetCustomAttributes(typeof(DescriptionAttribute), false) as DescriptionAttribute[];
+
+            if (attributes != null && attributes.Any())
+            {
+                return attributes.First().Description;
+            }
+
+            return value.ToString();
+        }
+
+        public static string GetEnumAlias(Enum value)
+        {
+            var fi = value.GetType().GetField(value.ToString());
+            if (fi != null)
+            {
+                var attributes = fi.GetCustomAttributes(typeof(AliasAttribute), false) as AliasAttribute[];
+
+                if (attributes != null && attributes.Any())
+                {
+                    return attributes.First().Alias;
+                }
+
+                return value.ToString();
+            }
+            else
+                return String.Empty;
+        }
+
+        public static T GetValueFromAlias<T>(string alias) where T : Enum
+        {
+            var type = typeof(T);
+            if (!type.IsEnum) throw new InvalidOperationException();
+
+            foreach (var field in type.GetFields())
+            {
+                var attribute = Attribute.GetCustomAttribute(field,
+                typeof(AliasAttribute)) as AliasAttribute;
+                if (attribute != null)
+                {
+                    if (attribute.Alias.Equals(alias, StringComparison.InvariantCultureIgnoreCase))
+                        return (T)field.GetValue(null);
+                }
+                else
+                {
+                    if (field.Name.Equals(alias, StringComparison.InvariantCultureIgnoreCase))
+                        return (T)field.GetValue(null);
+                }
+            }
+
+            // If alias is not exists, return value default
+            try
+            {
+                return (T)System.Enum.Parse(typeof(T), "None");
+            }
+            catch (Exception ex)
+            {
+                k.Diagnostic.Error(LOG, ex);
+                throw ex;
+            }
+
+
+        }
+
+        public static Dynamic From(object val)
+        {
+            return new Dynamic(val);
+        }
         #endregion
     }
 }

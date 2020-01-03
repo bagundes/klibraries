@@ -9,26 +9,26 @@ namespace k.db.Clients
     /// </summary>
     public class SqlCredential : DBCredential
     {
-        public SqlCredential() : base(k.db.R.Project)
+        public SqlCredential() : base()
         {
         }
 
-        public SqlCredential(string id) : base(k.G.Projects.KDB)
+        public SqlCredential(string id) : base()
         {
             base.Load(id);
         }
-        public SqlCredential(string server, string schema, string user, string passwd, int port = 1433) : base(k.G.Projects.KDB)
+        public SqlCredential(string server, string schema, string user, string passwd, int port = 1433) : base()
         {
             base.Host = server;
             base.Schema = schema;
             base.User = user;
-            base.Password = passwd;
+            base.EPassword = passwd;
             base.Parameters.Set("port", port);
         }
 
         public override string ToString()
         {
-            return String.Format("server={0};initial catalog={1};user id={2};password={3};", DbServer, Schema, User, Password);
+            return String.Format("server={0};initial catalog={1};user id={2};password={3};", DbServer, Schema, User, EPassword);
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace k.db.Clients
         /// <returns></returns>
         public string ToString(string schema)
         {
-            return String.Format("server={0};initial catalog={1};user id={2};password={3};", DbServer, schema, User, Password);
+            return String.Format("server={0};initial catalog={1};user id={2};password={3};", DbServer, schema, User, EPassword);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using k.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,7 +7,7 @@ namespace k.db.Factory
 {
     public static class Connection
     {
-        public static string LOG => typeof(Connection).Name;
+        public static string LOG => typeof(Connection).FullName;
 
         private static Type _client;// { get; internal set;}
 
@@ -15,8 +16,10 @@ namespace k.db.Factory
         /// </summary>
         /// <param name="dbase">Database name</param>
         /// <returns>Client connection</returns>
-        internal static IFactory GetClient(string id)
+        public static IFactory GetClient(string id)
         {
+            id = id ?? R.CredID;
+
             if (_client == null)
                 throw new KDBException(LOG, E.Message.ClientIsNotDefined_0);
 
@@ -26,11 +29,11 @@ namespace k.db.Factory
             return client;
         }
 
-        public static void SetClient<T>(T client) where T : Factory.IFactory
+        public static void SetClient<T>(T client) where T : k.Interfaces.IFactory
         {
             _client = client.GetType();
             R.CredID = client.Id;
-            k.Diagnostic.Debug(LOG, R.Project, "Defined as {0} default", _client.Name);
+            k.Diagnostic.Debug(LOG, null, "Defined as {0} default", _client.Name);
         }
     }
 }

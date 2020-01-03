@@ -84,8 +84,11 @@ namespace k.sap.di.Content.Queries {
         ///   Looks up a localized string similar to SELECT	 UFD1.&quot;FldValue&quot;
         ///		,UFD1.&quot;Descr&quot;
         ///FROM	 UFD1
+        ///INNER JOIN CUFD
+        ///	ON	 UFD1.&quot;TableID&quot; = CUFD.&quot;TableID&quot;
+        ///	and	 UFD1.&quot;FieldID&quot; = CUFD.&quot;FieldID&quot;
         ///WHERE	 UFD1.&quot;TableID&quot; = {0}
-        ///	AND	 UFD1.&quot;FieldID&quot; = {1}.
+        ///	AND	 CUFD.&quot;AliasID&quot; = {1}.
         /// </summary>
         internal static string ValidValues_2 {
             get {

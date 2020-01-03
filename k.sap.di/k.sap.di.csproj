@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Client.cs" />
+    <Compile Include="Clients\SAPClient.cs" />
     <Compile Include="Content\Language\en-GB.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -79,7 +80,6 @@
       <DependentUpon>OUTB.resx</DependentUpon>
     </Compile>
     <Compile Include="Content\SAPColumnAttribute.cs" />
-    <Compile Include="Dynamic.cs" />
     <Compile Include="E.cs" />
     <Compile Include="Init.cs" />
     <Compile Include="KDIException.cs" />
@@ -98,7 +98,7 @@
       <Name>k.sap</Name>
     </ProjectReference>
     <ProjectReference Include="..\k\k.csproj">
-      <Project>{7ad97f75-79dc-41a6-8411-8654ecc3249b}</Project>
+      <Project>{6e0cd0a0-cae7-4fc5-82c2-f1e02a89847f}</Project>
       <Name>k</Name>
     </ProjectReference>
   </ItemGroup>
@@ -106,10 +106,12 @@
     <EmbeddedResource Include="Content\Language\en-GB.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>en-GB.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Content\Queries\CUFD.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CUFD.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Content\Queries\OUTB.resx">
       <Generator>ResXFileCodeGenerator</Generator>

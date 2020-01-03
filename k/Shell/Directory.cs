@@ -7,6 +7,8 @@ namespace k.Shell
 {
     public static class Directory
     {
+        private static string LOG => typeof(Directory).FullName;
+
         public enum SpecialFolder
         {
             AppData = 26,
@@ -92,13 +94,14 @@ namespace k.Shell
                 if (!System.IO.Directory.Exists(specificFolder))
                 {
                     System.IO.Directory.CreateDirectory(specificFolder);
-                    k.Diagnostic.Debug("Folder", R.Project, "Created folder:{0}", specificFolder);
+                    k.Diagnostic.Debug(LOG, null, "Created folder:{0}", specificFolder);
                 }
 
                 return specificFolder;
             }
             catch(Exception ex)
             {
+                Diagnostic.Error(LOG, ex);
                 throw ex;
             }
         }

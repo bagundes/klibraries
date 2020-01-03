@@ -9,6 +9,7 @@ namespace k.Shell
 {
     public static class File
     {
+        private static string LOG => typeof(File).FullName;
         public static string Write(string text, string name,string path)
         {
             if (!System.IO.Directory.Exists(path))
@@ -41,22 +42,33 @@ namespace k.Shell
         #region Save  file
         public static void Save(string[] lines, string filename, bool ovride = false, bool wait = false)
         {
+            var tried = 0;
             var fileInfo = new FileInfo(filename);
             System.IO.Directory.CreateDirectory(fileInfo.DirectoryName);
 
-            var exists = System.IO.File.Exists(filename);
+            var exists = System.IO.File.Exists(fileInfo.FullName);
 
-            while (wait == true && IsLocked(filename) && exists)
+            while (wait == true && IsLocked(fileInfo.FullName) && exists)
+            {
                 System.Threading.Thread.Sleep(2000);
+
+                //TODO: Fix bug when log/track file is being used
+                if (tried++ > 20 
+                    && fileInfo.Directory.ToString().Contains(Helpers.DiagnosticHelper.PathLog))                   
+                {
+                    Save($"The {fileInfo.Name} file is locked a long time.", fileInfo.FullName, false);
+                    fileInfo = new FileInfo(fileInfo.FullName + "_locked");
+                }
+            }      
 
             if (ovride)
             {
-                if (WaitUnlocked(filename))
-                    System.IO.File.WriteAllLines(filename, lines);
+                if (WaitUnlocked(fileInfo.FullName))
+                    System.IO.File.WriteAllLines(fileInfo.FullName, lines);
             }
             else
             {
-                using (var file = new System.IO.StreamWriter(filename, true))
+                using (var file = new System.IO.StreamWriter(fileInfo.FullName, true))
                 {
                     for (int i = 0; i < lines.Length; i++)
                         file.WriteLine(lines[i]);
@@ -110,8 +122,8 @@ namespace k.Shell
 
                 if (R.DebugMode && files.Length > 0)
                 {
-                    var track = Diagnostic.Track(files);
-                    Diagnostic.Debug(typeof(File).Name, R.Project, track, "Compacted {0} files to {1}", files.Length, destination);
+                    var track = Diagnostic.TrackMessages(files);
+                    Diagnostic.Debug(typeof(File).Name, track, "Compacted {0} files to {1}", files.Length, destination);
                 }
             }
         }
@@ -139,6 +151,9 @@ namespace k.Shell
             {
                 if (file.Exists)
                     stream = file.Open(FileMode.Open, FileAccess.Read, FileShare.None);
+
+                //arquivo está disponível
+                return false;
             }
             catch (IOException)
             {
@@ -153,9 +168,6 @@ namespace k.Shell
                 if (stream != null)
                     stream.Close();
             }
-
-            //arquivo está disponível
-            return false;
         }
         #endregion
         public static void Delete(FileInfo file)
@@ -163,7 +175,7 @@ namespace k.Shell
             System.IO.File.Delete(file.FullName);
 
             if (R.DebugMode)
-                Diagnostic.Debug(typeof(File).Name, R.Project, "File deleted: {0}", file.FullName);            
+                Diagnostic.Debug(LOG, null, "File deleted: {0}", file.FullName);            
         }
 
         public static void Delete(FileInfo[] files)
@@ -173,20 +185,29 @@ namespace k.Shell
 
             if (R.DebugMode && files.Length > 0)
             {
-                var track = Diagnostic.Track(Array.ConvertAll(files, t => t.FullName));
-                Diagnostic.Debug(typeof(File).Name, R.Project, track, "Deleted {0} files", files.Length);
+                var track = Diagnostic.TrackMessages(Array.ConvertAll(files, t => t.FullName));
+                Diagnostic.Debug(LOG, null, "Deleted {0} files", files.Length);
             }
         }
 
         public static FileInfo[] Find(string path, string searchPattern = "*", SearchOption searchOption = SearchOption.AllDirectories, DateTime? lastAccess = null)
         {
             var access = lastAccess ?? DateTime.Now;
-
-            return System.IO.Directory.GetFiles(path, searchPattern, searchOption)
-                .Select(f => new FileInfo(f))
-                .Where(f => f.LastAccessTime < access)
-                .ToList()
-                .ToArray();
+            try
+            {
+                return System.IO.Directory.GetFiles(path, searchPattern, searchOption)
+                    .Select(f => new FileInfo(f))
+                    .Where(f => f.LastAccessTime < access)
+                    .ToList()
+                    .ToArray();
+            
+            }catch(Exception ex)
+            {
+                var track = Diagnostic.TrackObject(new { path, searchPattern, searchOption, lastAccess });
+                Diagnostic.Error(LOG, track, $"Error to find the files: {searchOption}. {ex.Message}");
+                Diagnostic.Error(LOG, ex);
+                throw ex;
+            }
         }
     }
 }

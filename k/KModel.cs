@@ -8,7 +8,7 @@ namespace k
 {
     public abstract class KModel
     {
-        public string Log => this.GetType().Name;
+        public string LOG => this.GetType().FullName;
                 
         protected virtual Object Clone() 
         {
@@ -47,8 +47,8 @@ namespace k
             if (this.GetType() != model.GetType())
                 return false;
 
-            var fields1 = k.Reflection.GetFields(this);
-            foreach (var f in k.Reflection.GetFields(model))
+            var fields1 = k.Reflection.GetPublicFields(this);
+            foreach (var f in k.Reflection.GetPublicFields(model))
             {
                 if (!fields1.Any(t => t.Name.Equals(f.Name)))
                     return false;
@@ -79,12 +79,13 @@ namespace k
             var id = 0;
             foreach(var p in k.Reflection.GetProperties(this))
             {
-                var v = k.Reflection.GetValue(this, p.Name).ToString();
-                for (int i = 0; i < v.Length; i++)
-                    id += (int)$"{p.Name}:{v}"[i]; 
+                var v = k.Reflection.GetValue(this, p.Name);
+                if(v != null)
+                    for (int i = 0; i < v.ToString().Length; i++)
+                        id += (int)$"{p.Name}:{v}"[i]; 
             }
 
-            foreach (var p in k.Reflection.GetFields(this))
+            foreach (var p in k.Reflection.GetPublicFields(this))
             {
                 var v = k.Reflection.GetValue(this, p.Name).ToString();
                 for (int i = 0; i < v.Length; i++)

@@ -8,6 +8,8 @@ namespace k.Stored
 {
     public static class ConfigFile
     {
+        private static string LOG => typeof(ConfigFile).FullName;
+
         public const string CONFIGGlobalFileName = "config.json";
         private static string CONFIGGlobalDevFileName
         {
@@ -20,7 +22,7 @@ namespace k.Stored
         }
         private static string PATH => k.R.App.Path;
 
-        private static k.Lists.MyList bucket;
+        private static k.Lists.Bucket bucket;
 
         private static void LoadingGlobal()
         {
@@ -41,7 +43,9 @@ namespace k.Stored
                 var dic = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(json);
 
                 var a = new object();
-                bucket = new k.Lists.MyList(dic);
+                bucket = new k.Lists.Bucket(dic);
+
+                k.Diagnostic.Debug(LOG, null, $"{configfile.Name} file loaded. {configfile.FullName}");
             }
         }
 

@@ -104,5 +104,14 @@ namespace k.Content.Language {
                 return ResourceManager.GetString("M00004_1", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The encrypted password is not valid..
+        /// </summary>
+        internal static string M00005_0 {
+            get {
+                return ResourceManager.GetString("M00005_0", resourceCulture);
+            }
+        }
     }
 }

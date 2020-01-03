@@ -7,30 +7,41 @@ namespace k
 {
     public class StartInit
     {
+        private static string LOG => typeof(StartInit).FullName;
 
         public static List<string> Ran { get; internal set; } = new List<string>();
 
+        [Obsolete("Use StartInit.Register", true)]
+        public static void Starting(IInit init){}
 
-        public static void Starting(IInit init)
+        public static void Register(IInit init)
         {
-            var name = init.GetType().FullName;
-            if (Ran.Where(t => t == name).Any())
-                return;
+            try
+            {
+                var name = init.GetType().FullName;
+                if (Ran.Where(t => t == name).Any())
+                    return;
 
-
-            init.Init10_Dependency();
-            init.Init20_Config();
-            init.Init50_Threads();
-
-            k.Diagnostic.Debug("StartInit", R.Project, "Registred the library {0}", name);
-            Ran.Add(name);
+                k.Diagnostic.Debug(LOG, null, "Starting {0} dependencies", name);
+                init.Init10_Dependencies();
+                k.Diagnostic.Debug(LOG, null, "Starting {0} configs", name);
+                init.Init20_Config();
+                k.Diagnostic.Debug(LOG, null, "Starting {0} threads ", name);
+                init.Init50_Threads();
+                k.Diagnostic.Debug(LOG, null, "Registred the {0} library", name);
+                Ran.Add(name);
+            }catch(Exception ex)
+            {
+                k.Diagnostic.Error(init, ex);
+                throw ex;
+            }
         }
 
     }
 
     public interface IInit
     {
-        void Init10_Dependency();
+        void Init10_Dependencies();
 
         void Init20_Config();
 

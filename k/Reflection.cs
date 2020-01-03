@@ -8,7 +8,7 @@ namespace k
 { 
     public class Reflection
     {
-        private static string LOG => typeof(Reflection).Name;
+        private static string LOG => typeof(Reflection).FullName;
         /// <summary>
         /// Set value in the property.
         /// </summary>
@@ -37,7 +37,7 @@ namespace k
             }
             catch (Exception ex)
             {
-                k.Diagnostic.Error(LOG, R.Project, ex);
+                k.Diagnostic.Error(LOG, ex);
                 return false;
             }
         }
@@ -109,12 +109,43 @@ namespace k
             return res.ToArray();
         }
 
-        public static FieldInfo[] GetFields(Object obj)
+        #region Fields
+        public static FieldInfo[] GetPublicFields(Object obj)
+        {
+            BindingFlags bindFlags = BindingFlags.Instance 
+                | BindingFlags.Public 
+                //| BindingFlags.NonPublic
+                | BindingFlags.Static;
+
+            return GetFields(obj, bindFlags);
+        }
+
+        public static FieldInfo[] GetPrivateFields(Object obj)
+        {
+            BindingFlags bindFlags = BindingFlags.Instance
+                //| BindingFlags.Public
+                | BindingFlags.NonPublic
+                | BindingFlags.Static;
+
+            return GetFields(obj, bindFlags);
+        }
+
+        public static FieldInfo[] GetAllFields(Object obj)
+        {
+            BindingFlags bindFlags = BindingFlags.Instance
+                | BindingFlags.Public
+                | BindingFlags.NonPublic
+                | BindingFlags.Static;
+
+            return GetFields(obj, bindFlags);
+        }
+
+        private static FieldInfo[] GetFields(Object obj, BindingFlags bindFlags)
         {
             var p = obj.GetType();
             var res = new List<FieldInfo>();
 
-            foreach (var proper in p.GetFields())
+            foreach (var proper in p.GetFields(bindFlags))
             {
 
                 if (proper != null && proper.Name != "get_LOG")
@@ -123,6 +154,7 @@ namespace k
 
             return res.ToArray();
         }
+        #endregion
 
         public static MemberInfo[] GetMembers(Object obj)
         {

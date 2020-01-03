@@ -132,4 +132,7 @@
   <data name="M00004_1" xml:space="preserve">
     <value>The bucket is limited {0} rows.</value>
   </data>
+  <data name="M00005_0" xml:space="preserve">
+    <value>The encrypted password is not valid.</value>
+  </data>
 </root>

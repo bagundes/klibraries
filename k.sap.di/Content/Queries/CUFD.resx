@@ -135,7 +135,10 @@ WHERE	 Sys = 'N'
     <value>SELECT	 UFD1."FldValue"
 		,UFD1."Descr"
 FROM	 UFD1
+INNER JOIN CUFD
+	ON	 UFD1."TableID" = CUFD."TableID"
+	and	 UFD1."FieldID" = CUFD."FieldID"
 WHERE	 UFD1."TableID" = {0}
-	AND	 UFD1."FieldID" = {1}</value>
+	AND	 CUFD."AliasID" = {1}</value>
   </data>
 </root>

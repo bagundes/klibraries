@@ -12,30 +12,28 @@ namespace k
         public readonly string LogName;
         public readonly string Tag;
         protected object[] Values;
-        public readonly G.Projects AppId;
-
+ 
         public override string Message => CreateMessage();
         protected abstract string MessageLangFile { get; }
 
-        public BaseException(G.Projects appId, string log, Enum code, params object[] values)
+        public BaseException(string log, Enum code, params object[] values)
         {
             LogName = log;
             Code = Convert.ToInt32(code);
             Tag = code.ToString();
             Values = values ?? new object[0];
-            AppId = appId;
+
+            var stack = new System.Diagnostics.StackFrame();
         }
 
-        public BaseException(G.Projects appId, string log, Exception ex)
+        public BaseException(string log, Exception ex)
         {
             LogName = log;
             Code = 0;
             Tag = "FatalError";
             Values = new object[1] { ex.Message } ;
-            AppId = appId;
 
-            var track = Diagnostic.Track(ex);
-            k.Diagnostic.Error(log, appId, track, ex.Message);
+            k.Diagnostic.Error(log, ex);
         }
 
         protected string CreateMessage()
@@ -52,15 +50,15 @@ namespace k
                 
                 if (String.IsNullOrEmpty(msg))
                 {
-                    k.Diagnostic.Warning(this.GetType().Name, R.Project, "The code {0} ({1}) is not MessageLangFile file", Code, Tag);
+                    k.Diagnostic.Warning(this, null, "The code {0} ({1}) is not MessageLangFile file", Code, Tag);
                     return $"[{code} - {Tag}] {String.Join(",", Values)}";
                 }
                 return Dynamic.StringFormat($"[{code}] {msg}", Values);
             }
             catch(Exception ex)
             {
-                var track = Diagnostic.Track(ex);
-                k.Diagnostic.Error(this.GetType().Name, R.Project, track, "Not found the code {0} ({1}) in the {2} language file", name, Tag,resx.BaseName);
+                var track = Diagnostic.TrackMessages(ex);
+                k.Diagnostic.Error(this, track, "Not found the code {0} ({1}) in the {2} language file", name, Tag,resx.BaseName);
                 return $"[{code} - {Tag}] {String.Join(",", Values)}";
             }
         }

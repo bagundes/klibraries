@@ -4,12 +4,13 @@ using System.Text;
 using System.Data.SqlClient;
 using k.Lists;
 using k.db.Factory;
+using k.Interfaces;
 
 namespace k.db.Clients
 {
-    public class SqlClient : Factory.IFactory
+    public class SqlClient : k.Interfaces.IFactory
     {
-        private string LOG => this.GetType().Name;
+        private string LOG => this.GetType().FullName;
 
         private string StringConn;
         private SqlConnection Conn;
@@ -18,7 +19,7 @@ namespace k.db.Clients
         private int Cursor;
         private string Alias;
         private bool HasLine;
-        private string Track;
+        private k.Structs.Track Track;
 
         public bool IsFirstLine { get; internal set; }
 
@@ -28,15 +29,16 @@ namespace k.db.Clients
 
         public string Id { get; internal set; }
 
-        public E.DataBase.TypeOfClient ClientType => E.DataBase.TypeOfClient.MSQL;
+        public G.DataBase.TypeOfClient ClientType => G.DataBase.TypeOfClient.MSQL;
 
         public int Position { get; internal set; }
+
+        G.DataBase.TypeOfClient IFactory.ClientType => throw new NotImplementedException();
 
         public T[] Column<T>(object index)
         {
             throw new NotImplementedException();
         }
-
 
         public void Connect(SqlCredential cred)
         {
@@ -45,9 +47,9 @@ namespace k.db.Clients
             StringConn = cred.ToString();
             Conn = new SqlConnection(StringConn);
             Conn.Open();
-            Alias = cred.DetailsSimple();
+            Alias = cred.Info2();
             Id = cred.Save();
-            k.Diagnostic.Debug(this.GetHashCode(), R.Project, $"Connected on SQL Server: {StringConn}");
+            k.Diagnostic.Debug(this.GetHashCode(), null, $"Connected on SQL Server: {StringConn}");
         }
 
         /// <summary>
@@ -69,7 +71,7 @@ namespace k.db.Clients
             if (Conn != null && Conn.State == System.Data.ConnectionState.Open)
             {
                 Conn.Close();
-                k.Diagnostic.Debug(this.GetHashCode(), R.Project, $"Desconnected on SQL Server: {Alias}");
+                k.Diagnostic.Debug(this.GetHashCode(), null, $"Desconnected on SQL Server: {Alias}");
             }
         }
 
@@ -78,7 +80,7 @@ namespace k.db.Clients
             try
             {
                 LastCommand = Factory.Scripts.FormatQuery(sql, values);
-                Track = k.Diagnostic.Track(sql, "Values:", values, "\nSQL Server: Query formated", LastCommand);
+                Track = k.Diagnostic.TrackMessages(sql, "Values:", values, "\nSQL Server: Query formated", LastCommand);
                 Command = new SqlCommand(LastCommand, Conn);
                 DataReader = Command.ExecuteReader();
 
@@ -99,8 +101,8 @@ namespace k.db.Clients
             }
             catch(Exception ex)
             {
-                k.Diagnostic.Error(LOG, R.Project, ex);
-                k.Diagnostic.Error(LOG, Track, R.Project, "Error to execute the query. {0}", ex.Message);
+                k.Diagnostic.Error(LOG, Track, "Error to execute the query.");
+                k.Diagnostic.Error(LOG, ex);
 
                 throw ex;
             }
@@ -111,9 +113,9 @@ namespace k.db.Clients
             throw new NotImplementedException();
         }
 
-        public MyList Fields()
+        public Bucket Fields()
         {
-            var res = new MyList();
+            var res = new Bucket();
 
             for (int c = 0; c < FieldCount; c++)
                 res.Add(DataReader.GetName(c), DataReader.GetValue(c));
@@ -143,7 +145,7 @@ namespace k.db.Clients
 
         public bool Next(int limit = -1)
         {
-            Position++;
+            
 
             if (!HasLine)
                 return false;
@@ -151,9 +153,14 @@ namespace k.db.Clients
             Cursor++;
             IsFirstLine = Cursor == 1;
 
+            if (IsFirstLine)
+                Position = 0;
+            else
+                Position++;
+
             if (Cursor > limit && limit > 0)
             {
-                k.Diagnostic.Warning(this.GetHashCode(), Track, R.Project, "The query is limited to show {0} lines.", limit);
+                k.Diagnostic.Warning(this.GetHashCode(), Track, "The query is limited to show {0} lines.", limit);
 
                 DataReader.Close();
             }
@@ -184,6 +191,11 @@ namespace k.db.Clients
         }
 
         public int Version()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Save<T>(T model) where T : IUserDataTableNoObject
         {
             throw new NotImplementedException();
         }

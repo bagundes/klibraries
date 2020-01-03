@@ -6,16 +6,15 @@ namespace k.db.Factory
 {
     public static class Scripts
     {
-        private static string LOG => typeof(Scripts).Name;        
+        private static string LOG => typeof(Scripts).FullName;        
 
         public static string FormatQuery(string sql, params object[] values)
         {
+            sql = FormatValues(sql, values);
             var clientType = Factory.Connection.GetClient(R.CredID).ClientType;
             Namespace(ref sql);
             SpecificLine(ref sql, clientType);
 
-            sql = FormatValues(sql, values);
-            
             return sql;
         }
 
@@ -39,7 +38,7 @@ namespace k.db.Factory
                             valueFormated = ((bool)value) ? "Y" : "N";
                             break;
                     default:
-                        k.Diagnostic.Error(LOG, R.Project, "Error to format {0} to {1} in position {2} in the {3} query", value, type.ToString(), i, sql);
+                        k.Diagnostic.Error(LOG, null, "Error to format {0} to {1} in position {2} in the {3} query", value, type.ToString(), i, sql);
                         throw new KDBException(LOG, E.Message.InvalidFormat_2, value, type.ToString());
                 }
 
@@ -50,17 +49,26 @@ namespace k.db.Factory
         }
 
         /// <summary>
-        /// Replace !!_ tag to R.Namespace
+        /// Replace !! tag to R.Namespace
         /// </summary>
         /// <param name="sql">Query or values to change</param>
         /// <returns></returns>
         public static bool Namespace(ref string sql)
         {
-            var nameSpace = E.DataBase.Tags.Namespace;
+            var nameSpace = G.DataBase.Tags.Namespace;
 
             var res = sql.Contains(nameSpace);
-            sql = sql.Replace(nameSpace, $"{R.Namespace}_");
+            sql = sql.Replace(nameSpace, $"{R.Namespace}");
             return res;
+        }
+
+        public static string Namespace(string val)
+        {
+            var nameSpace = G.DataBase.Tags.Namespace;
+
+            var res = val.Contains(nameSpace);
+            val = val.Replace(nameSpace, $"{R.Namespace}");
+            return val;
         }
 
         private static string GetTag(string tagname, string sql)
@@ -73,9 +81,9 @@ namespace k.db.Factory
             return null;
         }
 
-        public static bool SpecificLine(ref string sql, E.DataBase.TypeOfClient typeOfClient)
+        public static bool SpecificLine(ref string sql, G.DataBase.TypeOfClient typeOfClient)
         {
-            var specificLine = GetTag(E.DataBase.Tags.SpecificLineHeader, sql) ?? E.DataBase.Tags.SpecificLine;
+            var specificLine = GetTag(G.DataBase.Tags.SpecificLineHeader, sql) ?? G.DataBase.Tags.SpecificLine;
             var dbType = typeOfClient.ToString().ToLower();
             
             if (!sql.Contains(specificLine))

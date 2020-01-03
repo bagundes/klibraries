@@ -2,28 +2,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using k.Models;
+using k.Structs;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
 namespace k.Lists
 {
-    public partial class MyList
+    /// <summary>
+    /// My personal list
+    /// </summary>
+    public partial class Bucket : IEnumerable<Dictionary<string, Dynamic>>
     {
-        private string LOG => this.GetType().Name;
+        private string LOG => this.GetType().FullName;
         private const int DFLTSIZE = 10;
 
-        private List<Models.Entry> bucket;
+        private List<Entry> bucket;
 
+        /// <summary>
+        /// Value
+        /// </summary>
+        /// <param name="index">Row</param>
+        /// <param name="key">Column</param>
+        /// <returns></returns>
         public Dynamic this[int index, string key]
         {
-            get => bucket.Where(t => t.Key.Equals(key.ToLower()) && t.Index == index).Select(t => t.Value).FirstOrDefault();
+            get => bucket.Where(t => t.Key.Equals(key) && t.Index == index).Select(t => t.Value).FirstOrDefault();
             set => Set(key, value, index);
         }
 
+        /// <summary>
+        /// Row
+        /// </summary>
+        /// <param name="key">Row</param>
+        /// <returns></returns>
         public Dynamic this[string key]
         {
-            get => bucket.Where(t => t.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase)).Select(t => t.Value).FirstOrDefault();
+            get => bucket.Where(t => t.Key.Equals(key)).Select(t => t.Value).FirstOrDefault();
             set => Set(key, value);
         }
 
@@ -75,12 +89,12 @@ namespace k.Lists
         public bool IsReadOnly => false;
 
         #region construct
-        public MyList() 
+        public Bucket() 
         {
             bucket = new List<Entry>();
         }
 
-        public MyList(Dictionary<string, Dynamic> dictionary) 
+        public Bucket(Dictionary<string, Dynamic> dictionary) 
         {
             capacity = 1;
             size = dictionary.Count;
@@ -88,7 +102,7 @@ namespace k.Lists
             Set(dictionary, 0);
         }
 
-        public MyList(Dictionary<string, object> dictionary) 
+        public Bucket(Dictionary<string, object> dictionary) 
         {
             bucket = new List<Entry>();
 
@@ -96,14 +110,14 @@ namespace k.Lists
                 bucket.Add(new Entry { Index = 0, Key = val.Key, Value = new Dynamic(val.Value) });
         }
 
-        public MyList(int size, int capacity)
+        public Bucket(int size, int capacity)
         {
             this.capacity = capacity;
             this.size = size;
             bucket = new List<Entry>(size * capacity);
         }
 
-        public MyList(int capacity)
+        public Bucket(int capacity)
         {
             this.capacity = capacity;
             bucket = new List<Entry>();
@@ -122,7 +136,6 @@ namespace k.Lists
 
         private bool AddBucket(string key, object value, int index)
         {
-            key = key.ToLower();
             if (Contains(index, key))
                 return false;
             else
@@ -135,7 +148,6 @@ namespace k.Lists
 
         private void SetBucket(string key, object value, int index)
         {
-            key = key.ToLower();
             if (Contains(index, key))
             {
                 var i = GetRealIndex(index, key);
@@ -152,17 +164,17 @@ namespace k.Lists
 
         private int GetRealIndex(int index, string key)
         {
-            return bucket.FindIndex(t => t.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase) && t.Index == index);
+            return bucket.FindIndex(t => t.Key.Equals(key) && t.Index == index);
         }
         private bool HasSpace(int index)
         {
             if(bucket == null)
                 bucket = new List<Entry>();
             
-            if (Size.HasValue && Size >= CountColumns(index))
+            if (Size.HasValue && CountColumns(index) >= Size)
                 throw new KException(LOG, E.Message.BucketSizeLimite_1, Size.Value);
 
-            if (Capacity.HasValue && Capacity >= CountRows)
+            if (Capacity.HasValue && CountRows >= Capacity && bucket.Count >= bucket.Capacity)
                 throw new KException(LOG, E.Message.BucketCapacityLimite_1, Capacity.Value);
 
             return true;
@@ -183,7 +195,7 @@ namespace k.Lists
         #endregion
 
         #region Set
-        public void Set(MyList myList, int position)
+        public void Set(Bucket myList, int position)
         {
 
             for (int r = 0; r < myList.CountRows; r++)
@@ -220,7 +232,7 @@ namespace k.Lists
         {
             if (Contains(index, key))
             {
-                val = bucket.Where(t => t.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase) && t.Index == index).Select(t => t.Value).First();
+                val = bucket.Where(t => t.Key.Equals(key) && t.Index == index).Select(t => t.Value).First();
                 return true;
             } else
             {
@@ -229,6 +241,24 @@ namespace k.Lists
             }
         }
 
+        #region Enumerator
+        private IEnumerator<Dictionary<string, Dynamic>> Entries()
+        {
+            for(int i = 0; i < CountRows; i++)
+                yield return this[i];
+        }
+
+        public IEnumerator<Dictionary<string, Dynamic>> GetEnumerator()
+        {
+            return Entries();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+        #endregion
+
         /// <summary>
         /// Verify if exists key in the rows
         /// </summary>
@@ -236,12 +266,11 @@ namespace k.Lists
         /// <returns></returns>
         public bool Contains(string key)
         {
-            return bucket.Where(t => t.Key.Equals(key, StringComparison.InvariantCultureIgnoreCase)).Any();
+            return bucket.Where(t => t.Key.Equals(key)).Any();
         }
 
         public bool Contains(int index, string key)
         {
-            key = key.ToLower();
             return bucket != null && bucket.Where(t => t.Index == index && t.Key.Equals(key)).Any();
         }
 
@@ -275,5 +304,20 @@ namespace k.Lists
             }
         }
 
+        public string Join(string separator)
+        {
+            // TODO: Fix format code
+            var values = new List<string>();
+            foreach (var line in this)
+                foreach (var cell in line)
+                    values.Add(cell.Value);
+
+            return String.Join(separator, values);
+        }
+    }
+
+    public partial class Bucket
+    {
+        public static Bucket Empty => new Bucket(0, 0);
     }
 }
