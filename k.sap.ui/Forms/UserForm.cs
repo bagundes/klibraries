@@ -16,9 +16,11 @@ namespace k.sap.ui.Forms
             this.srf = srf;
         }
 
+
         protected void Load(bool visible)
         {
             oForm = k.sap.ui.Helpers.FormHelper.Load(srf, visible);
+
             InitComponents();
         }
     }

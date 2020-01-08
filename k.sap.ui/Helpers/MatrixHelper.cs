@@ -40,6 +40,17 @@ namespace k.sap.ui.Helpers
             }
         }
 
+        public static void Refresh(ref SAPbouiCOM.Matrix matrix)
+        {
+            // User datasource only
+            //matrix.LoadFromDataSourceEx();
+            //matrix.FlushToDataSource();
+            matrix.Item.Update();
+            
+            //matrix.LoadFromDataSource();
+            //matrix.LoadFromDataSourceEx(true);
+        }
+
         public static void DelRowWithoutDSource(ref SAPbouiCOM.Matrix matrix)
         {
             try

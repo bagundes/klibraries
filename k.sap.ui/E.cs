@@ -13,7 +13,7 @@ namespace k.sap.ui
 #if DEBUG
         public static string ConnString = "0030002C0030002C00530041005000420044005F00440061007400650076002C0050004C006F006D0056004900490056";
 #else
-        public static string ConnString = System.Convert.ToString(Environment.GetCommandLineArgs().GetValue(1))
+        public static string ConnString = System.Convert.ToString(Environment.GetCommandLineArgs().GetValue(1));
 #endif
 
         internal enum Message

@@ -51,8 +51,12 @@
     </Compile>
     <Compile Include="E.cs" />
     <Compile Include="Client.cs" />
+    <Compile Include="Forms\Attributes\SAPUI_ActionAttribute.cs" />
+    <Compile Include="Forms\Attributes\SAPUI_DataEventAttribute.cs" />
+    <Compile Include="Forms\Attributes\SAPUI_MenuEventAttribute.cs" />
     <Compile Include="Forms\SelectFromListForm.cs" />
     <Compile Include="Forms\Form.cs" />
+    <Compile Include="Forms\SystemHelpers\CRM\ActivitySystemHelper.cs" />
     <Compile Include="Forms\UserForm.cs" />
     <Compile Include="Forms\SystemFormLoad.cs" />
     <Compile Include="Forms\SystemHelpers\Others\CalendarSystemHelper.cs" />
@@ -60,6 +64,7 @@
     <Compile Include="Helpers\ComboboxHelper.cs" />
     <Compile Include="Helpers\EditTextHelper.cs" />
     <Compile Include="Helpers\FormHelper.cs" />
+    <Compile Include="Helpers\GridHelper.cs" />
     <Compile Include="Helpers\MatrixHelper.cs" />
     <Compile Include="Helpers\MessageHelper.cs" />
     <Compile Include="Helpers\OptionsHelper.cs" />

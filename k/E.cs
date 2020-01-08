@@ -18,7 +18,7 @@ namespace k
             KDIServer = 2002,
             KUI = 2002,
 
-            AddBase = 5000,
+            AddonBase = 5000,
             GoodsReceiptScheduler = 5001,
 
             Others = 9998,

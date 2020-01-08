@@ -7,7 +7,6 @@ namespace k.db.Factory
 {
     public class ResultSet
     {
-
         /// <summary>
         /// Get specific field
         /// </summary>

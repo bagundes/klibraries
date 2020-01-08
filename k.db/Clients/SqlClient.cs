@@ -4,11 +4,11 @@ using System.Text;
 using System.Data.SqlClient;
 using k.Lists;
 using k.db.Factory;
-using k.Interfaces;
+using k.sap.Models;
 
 namespace k.db.Clients
 {
-    public class SqlClient : k.Interfaces.IFactory
+    public class SqlClient : k.db.IFactory
     {
         private string LOG => this.GetType().FullName;
 
@@ -40,6 +40,19 @@ namespace k.db.Clients
             throw new NotImplementedException();
         }
 
+        public void Connect(IDBCredential cred)
+        {
+            Dispose();
+            var sqlCred = cred as SqlCredential;
+            StringConn = cred.ToString();
+            Conn = new SqlConnection(StringConn);
+            Conn.Open();
+            Alias = sqlCred.Info2();
+            Id = sqlCred.Save();
+            k.Diagnostic.Debug(this.GetHashCode(), null, $"Connected on SQL Server: {StringConn}");
+        }
+
+        //TODO: Remove this constructor
         public void Connect(SqlCredential cred)
         {
             Dispose();

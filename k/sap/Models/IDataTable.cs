@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace k.Interfaces
+namespace k.sap.Models
 {
     public interface IDataTable
     {

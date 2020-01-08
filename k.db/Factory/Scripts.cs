@@ -29,6 +29,7 @@ namespace k.db.Factory
 
                 switch (type)
                 {
+                    case TypeCode.Object:
                     case TypeCode.String:
                     case TypeCode.Int32:
                         valueFormated = value.ToString(); break;

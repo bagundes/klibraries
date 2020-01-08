@@ -42,6 +42,34 @@ namespace k.sap.ui.Forms.SystemHelpers.Others
             None
         }
 
+        public static void ReloadCalendar(ref SAPbouiCOM.Form oForm)
+        {
+            //var foo = DI.Conn.InTransaction;
+            //TODO: Static values
+            var butGo = oForm.Items.Item("100");
+            butGo.Click();
+            //var matrix = oForm.Items.Item("134").Specific as Matrix;
+            //MatrixHelper.Refresh(ref matrix);
+            
+
+            //oForm.Refresh();
+
+            //oForm.Close();
+            //System.Threading.Thread.Sleep(3000);
+            //UI.Conn.Menus.Item(UniqueID.MenuUID).Activate();
+            //System.Threading.Thread.Sleep(3000);
+            //UI.Conn.Menus.Item(UniqueID.MenuUID).Activate();
+            //TODO: Static values
+            //var matrix = oForm.Items.Item(UniqueID.MtxCalendarUID).Specific as Matrix;
+            //MatrixHelper.Refresh(ref matrix);
+            //var foo = matrix.GetCellSpecific("0", 10) as Cell;
+            //var bar = foo.Specific as EditText;
+            ////oForm.Items.Item("100").Click();
+
+
+
+        }
+
         public static TypeOfCalendar GetTypeOfCalendar(ref SAPbouiCOM.Form oForm)
         {
             //TODO: Method return fixed value
@@ -72,6 +100,7 @@ namespace k.sap.ui.Forms.SystemHelpers.Others
             var date = GetDate(ref oForm);
             if (typeOfCalendar == TypeOfCalendar.Day)
             {
+                if (row == -1) row = 1;
 
                 var time = TimeSpan.FromMinutes(30 * (row - 1));
                 date = date.Add(time);

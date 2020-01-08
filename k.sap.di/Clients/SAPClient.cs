@@ -1,4 +1,6 @@
-﻿using k.Lists;
+﻿using k.db.Factory;
+using k.Lists;
+using k.sap.Models;
 using SAPbobsCOM;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,7 @@ using DI = k.sap.DI;
 
 namespace k.db.Clients
 {
-    public class SAPClient : Interfaces.IFactory
+    public class SAPClient : IFactory
     {
         private string LOG => this.GetType().FullName;
 
@@ -39,9 +41,9 @@ namespace k.db.Clients
 
         }
 
-        public void Connect(DBCredential cred)
+        public void Connect(IDBCredential cred)
         {
-            throw new NotSupportedException();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -183,7 +185,7 @@ namespace k.db.Clients
             throw new NotImplementedException();
         }
 
-        public void Save<T>(T model) where T : k.Interfaces.IUserDataTableNoObject
+        public void Save<T>(T model) where T : IUserDataTableNoObject
         {
             //if (model.Properties.IsSystem)
             //    throw new NotImplementedException();
@@ -238,6 +240,11 @@ namespace k.db.Clients
             //    DI.CommitTransaction(numTransaction);
             //}
 
+        }
+
+        public string FormatQuery(string sql, params dynamic[] values)
+        {
+            throw new NotImplementedException();
         }
     }
 }

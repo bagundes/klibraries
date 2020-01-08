@@ -33,12 +33,9 @@ namespace k
             get
             {
                 if (String.IsNullOrEmpty(projectName))
-                    if (!DebugMode)
                         throw new Exception("It's need add project name in k.R.ProjectName");
-                    else
-                        return "KTests";
-                else
-                    return projectName;
+                    
+                return projectName;
                 
             }
             set

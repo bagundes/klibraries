@@ -1,5 +1,4 @@
-﻿using k.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -29,7 +28,7 @@ namespace k.db.Factory
             return client;
         }
 
-        public static void SetClient<T>(T client) where T : k.Interfaces.IFactory
+        public static void SetClient<T>(T client) where T : IFactory
         {
             _client = client.GetType();
             R.CredID = client.Id;

@@ -49,6 +49,10 @@ namespace k.sap.ui.Forms
         /// <param name="values">Values to query</param>
         public void Load(string sql, params object[] values)
         {
+            try
+            {
+
+            
             base.Load(true);
             oForm.Title = $"{k.R.Namespace}: {Title}";
             udtBucket = oForm.DataSources.DataTables.Item(BucketDataTableXMLUniqueID);
@@ -56,8 +60,12 @@ namespace k.sap.ui.Forms
             LoadEvents();
 
             LoadGridBucket(Multi, sql, values);
+            } finally
+            {
+                oForm.Freeze(false);
+            }
 
-            
+
         }
 
         protected override void LoadEvents()
@@ -70,23 +78,11 @@ namespace k.sap.ui.Forms
     // Events
     public partial class SelectFromListForm
     {
-        public static void UI_FormDataEvent(ref SAPbouiCOM.BusinessObjectInfo BusinessObjectInfo, out bool BubbleEvent)
-        {
-            BubbleEvent = true;
-
-            if (BusinessObjectInfo.FormTypeEx == FormTypeEx)
-
-            {
-                var a = BusinessObjectInfo.EventType == BoEventTypes.et_FORM_DRAW;
-            }
-
-        }
-
         private void butSearch_ClickAfter(object sboObject, SBOItemEventArg pVal)
         {
             var filterText = FormHelper.GetValue(txtFindItem.Item, false);
-            if (!filterText.IsNullOrEmpty())
-                Filter(filterText);
+            //if (!filterText.IsNullOrEmpty())
+            Filter(filterText);
         }
         private void butChoose_ClickAfter(object sboObject, SBOItemEventArg pVal)
         {
@@ -102,11 +98,9 @@ namespace k.sap.ui.Forms
     {
         private void LoadGridBucket(bool multi, string sql, params object[] values)
         {
-            oForm.Freeze(true);
-            
             try 
             {
-
+                oForm.Freeze(true);
                 #region Prepare ListDataTable
                 sql = db.Factory.Scripts.FormatQuery(sql, values);
 
@@ -252,13 +246,15 @@ namespace k.sap.ui.Forms
             var bucket = new Bucket();
             if(Multi)
             {
+                var foo = 0;
                 for(int l = 0; l < udtBucket.Rows.Count; l++)
                     if(udtBucket.GetValue(ColCheckBoxUniqueID, l) == "Y")
                     {
                         for (int c = 0; c < udtBucket.Columns.Count; c++)
                         {
-                            bucket.Add(udtBucket.Columns.Item(c).Name, udtBucket.GetValue(c, l), l);
+                            bucket.Add(udtBucket.Columns.Item(c).Name, udtBucket.GetValue(c, l), foo);
                         }
+                        foo++;
                     }
             }
             else

@@ -16,7 +16,7 @@ namespace k.sap.ui
 
         public void Init20_Config()
         {
-            k.sap.UI.Conn.FormDataEvent += new SAPbouiCOM._IApplicationEvents_FormDataEventEventHandler(Forms.SelectFromListForm.UI_FormDataEvent);
+            //k.sap.UI.Conn.FormDataEvent += new SAPbouiCOM._IApplicationEvents_FormDataEventEventHandler(Forms.SelectFromListForm.UI_FormDataEvent);
         }
 
         public void Init50_Threads()

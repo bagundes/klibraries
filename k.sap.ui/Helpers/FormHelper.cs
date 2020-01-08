@@ -1,4 +1,5 @@
 ﻿using DynamicExpresso;
+using SAPbouiCOM;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,12 @@ namespace k.sap.ui.Helpers
     {
         private static string LOG => typeof(FormHelper).FullName;
 
+        /// <summary>
+        /// Load the form
+        /// </summary>
+        /// <param name="srf_xml">xml source</param>
+        /// <param name="visible">show in SAP</param>
+        /// <returns>Form with freeze status</returns>
         public static SAPbouiCOM.Form Load(string srf_xml, bool visible)
         {            
             var oFormCreationParams =  k.sap.UI.Conn.CreateObject(SAPbouiCOM.BoCreatableObjectType.cot_FormCreationParams) as SAPbouiCOM.FormCreationParams;
@@ -23,9 +30,15 @@ namespace k.sap.ui.Helpers
             var oForm = k.sap.UI.Conn.Forms.AddEx(oFormCreationParams);
             oForm.Visible = visible;
 
+#if !DEBUG
+            oForm.Freeze(true);
+#endif
+
             return oForm;
         }
 
+
+        #region Get value
         /// <summary>
         /// Get value of control componete
         /// </summary>
@@ -75,11 +88,18 @@ namespace k.sap.ui.Helpers
 
         }
 
+        public static Dynamic GetValue(ref SAPbouiCOM.Form oForm, string uid, bool require, string nullif = null)
+        {
+            return GetValue(oForm.Items.Item(uid), require, nullif); 
+        }
+
         public static Dynamic GetValue(SAPbouiCOM.Cell oCell, bool require, string nullif = null)
         {
             var oItem = (oCell.Specific as SAPbouiCOM.EditText).Item;
             return GetValue(oItem, require, nullif);
         }
+        #endregion
+
         public static void SetUDSValue(ref SAPbouiCOM.Form oForm, string uniqueID, string value)
         {
             oForm.DataSources.UserDataSources.Item(uniqueID).ValueEx = value;
@@ -111,5 +131,34 @@ namespace k.sap.ui.Helpers
             }
         }
 
+        public static DataTable SetDataTable(ref SAPbouiCOM.Form oForm, string uid)
+        {
+            try
+            {
+                //TODO: Change to check xml file
+                return oForm.DataSources.DataTables.Add(uid);
+            }
+            catch
+            {
+                
+            }
+
+            return oForm.DataSources.DataTables.Item(uid);
+        }
+
+        public static Item SetItem(ref SAPbouiCOM.Form oForm, string uid, BoFormItemTypes boFormItemTypes)
+        {
+            try
+            {
+                //TODO: Change to check xml file
+                return oForm.Items.Add(uid, boFormItemTypes);
+            }
+            catch
+            {
+
+            }
+
+            return oForm.Items.Item(uid);
+        }
     }
 }

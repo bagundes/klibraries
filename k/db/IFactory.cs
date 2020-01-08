@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace k.Interfaces
+namespace k.db
 {
     public interface IFactory : IDisposable
     {
@@ -18,7 +18,7 @@ namespace k.Interfaces
         int Position { get; }
         #endregion
 
-        void Connect(DBCredential cred);
+        void Connect(IDBCredential cred);
 
         void Connect(string credId);
 
@@ -46,6 +46,6 @@ namespace k.Interfaces
         //ColumnStruct[] Columns(string table);
         #endregion
 
-        void Save<T>(T model) where T : k.Interfaces.IUserDataTableNoObject;
+        void Save<T>(T model) where T : k.sap.Models.IUserDataTableNoObject;
     }
 }

@@ -9,14 +9,17 @@ namespace k.sap.ui.Forms
     public abstract class SystemFormLoad : Form
     {
 
-        public SystemFormLoad(string typeEx)
+        public SystemFormLoad(string typeEx, SAPbouiCOM.Form oForm = null)
         {
             TypeEx = typeEx;
+            this.oForm = oForm;
         }
 
         public virtual void Load()
         {
-            this.oForm = k.sap.UI.GetActiveForm();
+            if (oForm == null)
+                this.oForm = k.sap.UI.Conn.Forms.GetForm(TypeEx, 0);
+
             if (oForm.TypeEx != TypeEx)
                 throw new KUIException(LOG, E.Message.InvalidActiveForm_2, TypeEx, oForm.TypeEx);
 
